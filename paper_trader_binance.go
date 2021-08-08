@@ -1,4 +1,3 @@
-// Package papertrade will provide a mini fake exchange to trade on it.
 package trade_knife
 
 import (
