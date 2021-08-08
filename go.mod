@@ -1,4 +1,4 @@
-module github.com/amir-the-h/trade_knife
+module github.com/amir-the-h/trade-knife
 
 go 1.16
 
