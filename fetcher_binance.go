@@ -48,7 +48,9 @@ func NewQuoteFromBinanceSpot(apiKey, secretKey, symbol string, interval Interval
 		}
 	}
 
-	return &quote, nil
+	q := &quote
+	q.Sort()
+	return q, nil
 }
 
 // Fetches quote from binace futures market.
@@ -88,7 +90,9 @@ func NewQuoteFromBinanceFutures(apiKey, secretKey, symbol string, interval Inter
 		}
 	}
 
-	return &quote, nil
+	q := &quote
+	q.Sort()
+	return q, nil
 }
 
 // Fetches quote from binace delivery market.
@@ -129,7 +133,9 @@ func NewQuoteFromBinanceDelivery(apiKey, secretKey, symbol string, interval Inte
 		}
 	}
 
-	return &quote, nil
+	q := &quote
+	q.Sort()
+	return q, nil
 }
 
 // Will sync quote with latest binance spot kline info.

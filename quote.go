@@ -79,3 +79,24 @@ func (q *Quote) Sync(symbol string, interval Interval, open, high, low, close, v
 
 	return
 }
+
+// Returns a list of indicators used in quote.
+func (q *Quote) IndicatorNames() []string {
+	indicators := []string{}
+	for _, candle := range *q {
+		for indicator := range candle.Indicators {
+			hasIndicator := false
+			for _, name := range indicators {
+				if name == indicator {
+					hasIndicator = true
+					break
+				}
+			}
+			if !hasIndicator {
+				indicators = append(indicators, indicator)
+			}
+		}
+	}
+
+	return indicators
+}
