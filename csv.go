@@ -29,15 +29,15 @@ func (c *Candle) Csv(indicators ...string) (csv string) {
 }
 
 // Returns csv formated string of whole quote.
-func (q Quote) Csv(indiactors ...string) (csv string) {
+func (q Quote) Csv(indicators ...string) (csv string) {
 	if len(q) == 0 {
 		return
 	}
 	// fix the headers
 	headers := []string{"Symbol", "Interval", "Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time"}
 	var indicatorNames []string
-	if len(indiactors) > 0 {
-		indicatorNames = indiactors
+	if len(indicators) > 0 {
+		indicatorNames = indicators
 	} else {
 		indicatorNames = q.IndicatorNames()
 	}
