@@ -1,6 +1,7 @@
 package trade_knife
 
 import (
+	"errors"
 	"sort"
 	"time"
 )
@@ -12,7 +13,7 @@ type Quote []*Candle
 func (q *Quote) Find(symbol string, timestamp int64) (*Candle, int) {
 	quote := *q
 	for i, candle := range quote {
-		if candle.Opentime.Unix() == timestamp || candle.Closetime.Unix() == timestamp || (candle.Opentime.Unix() < timestamp && candle.Closetime.Unix() > timestamp) {
+		if candle.Opentime.Unix() == timestamp || (candle.Opentime.Unix() < timestamp && candle.Closetime.Unix() > timestamp) {
 			return candle, i
 		}
 	}
@@ -99,4 +100,32 @@ func (q *Quote) IndicatorNames() []string {
 	}
 
 	return indicators
+}
+
+// Merge target quote into the current quote, rewrite duplicates and sort it.
+func (q *Quote) Merge(target *Quote) {
+	quote := *q
+	for _, candle := range *target {
+		c, i := quote.Find(candle.Symbol, candle.Opentime.Unix())
+		if c != nil {
+			quote[i] = candle
+		} else {
+			quote = append(quote, candle)
+		}
+	}
+
+	*q = quote
+}
+
+// Add indicator values by the given name into the quote.
+func (q *Quote) AddIndicator(name string, values []float64) error {
+	if len(values) != len(*q) {
+		return errors.New("count mismatched")
+	}
+
+	for i, candle := range *q {
+		candle.Indicators[name] = values[i]
+	}
+
+	return nil
 }

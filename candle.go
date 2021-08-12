@@ -45,3 +45,8 @@ func NewCandle(symbol string, open, high, low, close, volume float64, openTime, 
 
 	return
 }
+
+// Add indicator value by the given name into the candle.
+func (c *Candle) AddIndicator(name string, value float64) {
+	c.Indicators[name] = value
+}

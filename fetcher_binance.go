@@ -2,6 +2,7 @@ package trade_knife
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -12,15 +13,19 @@ import (
 )
 
 // Fetches quote from binance spot market.
-func NewQuoteFromBinanceSpot(apiKey, secretKey, symbol string, interval Interval) (*Quote, error) {
+func NewQuoteFromBinanceSpot(apiKey, secretKey, symbol string, interval Interval, openTimestamp ...int64) (*Quote, error) {
 	var (
 		quote                Quote
 		tots, tcts, ots, cts time.Time
 	)
-	diff := interval.Duration()
 
 	client := binance.NewClient(apiKey, secretKey)
 	request := client.NewKlinesService().Symbol(symbol).Interval(string(interval))
+	direction := -1
+	if len(openTimestamp) > 0 {
+		direction = 1
+		request.StartTime(openTimestamp[0] * 1000)
+	}
 	klines, err := request.Do(context.Background())
 	if err != nil {
 		return &quote, err
@@ -29,8 +34,8 @@ func NewQuoteFromBinanceSpot(apiKey, secretKey, symbol string, interval Interval
 	for len(klines) > 0 {
 		tots = ots
 		tcts = cts
-		ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * -24 * 90).UTC()
-		cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(diff).UTC()
+		ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * time.Duration(direction) * 24 * 90).UTC()
+		cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(interval.Duration()).UTC()
 		if tots == ots || tcts == cts {
 			break
 		}
@@ -54,15 +59,19 @@ func NewQuoteFromBinanceSpot(apiKey, secretKey, symbol string, interval Interval
 }
 
 // Fetches quote from binace futures market.
-func NewQuoteFromBinanceFutures(apiKey, secretKey, symbol string, interval Interval) (*Quote, error) {
+func NewQuoteFromBinanceFutures(apiKey, secretKey, symbol string, interval Interval, openTimestamp ...int64) (*Quote, error) {
 	var (
 		quote                Quote
 		tots, tcts, ots, cts time.Time
 	)
-	diff := interval.Duration()
 
 	client := futures.NewClient(apiKey, secretKey)
 	request := client.NewKlinesService().Symbol(symbol).Interval(string(interval))
+	direction := -1
+	if len(openTimestamp) > 0 {
+		direction = 1
+		request.StartTime(openTimestamp[0] * 1000)
+	}
 	klines, err := request.Do(context.Background())
 	if err != nil {
 		return &quote, err
@@ -71,8 +80,8 @@ func NewQuoteFromBinanceFutures(apiKey, secretKey, symbol string, interval Inter
 	for len(klines) > 0 {
 		tots = ots
 		tcts = cts
-		ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * -24 * 90).UTC()
-		cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(diff).UTC()
+		ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * time.Duration(direction) * 24 * 90).UTC()
+		cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(interval.Duration()).UTC()
 		if tots == ots || tcts == cts {
 			break
 		}
@@ -96,15 +105,19 @@ func NewQuoteFromBinanceFutures(apiKey, secretKey, symbol string, interval Inter
 }
 
 // Fetches quote from binace delivery market.
-func NewQuoteFromBinanceDelivery(apiKey, secretKey, symbol string, interval Interval) (*Quote, error) {
+func NewQuoteFromBinanceDelivery(apiKey, secretKey, symbol string, interval Interval, openTimestamp ...int64) (*Quote, error) {
 	var (
 		quote                Quote
 		tots, tcts, ots, cts time.Time
 	)
-	diff := interval.Duration()
 
 	client := delivery.NewClient(apiKey, secretKey)
 	request := client.NewKlinesService().Symbol(symbol).Interval(string(interval))
+	direction := -1
+	if len(openTimestamp) > 0 {
+		direction = 1
+		request.StartTime(openTimestamp[0] * 1000)
+	}
 	klines, err := request.Do(context.Background())
 	if err != nil {
 		return &quote, err
@@ -113,8 +126,8 @@ func NewQuoteFromBinanceDelivery(apiKey, secretKey, symbol string, interval Inte
 	for len(klines) > 0 {
 		tots = ots
 		tcts = cts
-		ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * -24 * 90).UTC()
-		cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(diff).UTC()
+		ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * time.Duration(direction) * -24 * 90).UTC()
+		cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(interval.Duration()).UTC()
 		if tots == ots || tcts == cts {
 			break
 		}
@@ -136,6 +149,63 @@ func NewQuoteFromBinanceDelivery(apiKey, secretKey, symbol string, interval Inte
 	q := &quote
 	q.Sort()
 	return q, nil
+}
+
+// Fetch all spot candles after last candle including itself.
+func (q *Quote) RefreshBinanceSpot(apiKey, secretKey string) error {
+	quote := *q
+	if len(quote) == 0 {
+		return errors.New("won't be able to refresh an empty quote")
+	}
+
+	lastCandle := quote[len(quote)-1]
+	openTime := lastCandle.Opentime.Unix()
+	fetchedQuote, err := NewQuoteFromBinanceSpot(apiKey, secretKey, lastCandle.Symbol, lastCandle.Interval, openTime)
+	if err != nil {
+		return err
+	}
+
+	q.Merge(fetchedQuote)
+
+	return nil
+}
+
+// Fetch all futures candles after last candle including itself.
+func (q *Quote) RefreshBinanceFutures(apiKey, secretKey string) error {
+	quote := *q
+	if len(quote) == 0 {
+		return errors.New("won't be able to refresh an empty quote")
+	}
+
+	lastCandle := quote[len(quote)-1]
+	openTime := lastCandle.Opentime.Unix()
+	fetchedQuote, err := NewQuoteFromBinanceFutures(apiKey, secretKey, lastCandle.Symbol, lastCandle.Interval, openTime)
+	if err != nil {
+		return err
+	}
+
+	q.Merge(fetchedQuote)
+
+	return nil
+}
+
+// Fetch all delivery candles after last candle including itself.
+func (q *Quote) RefreshBinanceDelivery(apiKey, secretKey string) error {
+	quote := *q
+	if len(quote) == 0 {
+		return errors.New("won't be able to refresh an empty quote")
+	}
+
+	lastCandle := quote[len(quote)-1]
+	openTime := lastCandle.Opentime.Unix()
+	fetchedQuote, err := NewQuoteFromBinanceDelivery(apiKey, secretKey, lastCandle.Symbol, lastCandle.Interval, openTime)
+	if err != nil {
+		return err
+	}
+
+	q.Merge(fetchedQuote)
+
+	return nil
 }
 
 // Will sync quote with latest binance spot kline info.

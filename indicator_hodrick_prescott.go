@@ -1,5 +1,6 @@
 package trade_knife
 
+// Calculate HP filter for each entry by group of last [length] candles.
 func HPIndicator(values []float64, lambda float64, length int) []float64 {
 	result := make([]float64, len(values))
 	for index := length; index <= len(values); index++ {
