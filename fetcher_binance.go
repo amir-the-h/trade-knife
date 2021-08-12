@@ -209,7 +209,13 @@ func (q *Quote) RefreshBinanceDelivery(apiKey, secretKey string) error {
 }
 
 // Will sync quote with latest binance spot kline info.
-func (q *Quote) SyncBinanceSpot(symbol string, interval Interval, update CandleChannel) (doneC chan struct{}, err error) {
+func (q *Quote) SyncBinanceSpot(update CandleChannel) (doneC chan struct{}, err error) {
+	quote := *q
+	if len(quote) == 0 {
+		return nil, errors.New("won't be able to sync an empty quote")
+	}
+
+	lastCandle := quote[len(quote)-1]
 	wsKlineHandler := func(event *binance.WsKlineEvent) {
 		kline := event.Kline
 		o, _ := strconv.ParseFloat(kline.Open, 64)
@@ -219,7 +225,7 @@ func (q *Quote) SyncBinanceSpot(symbol string, interval Interval, update CandleC
 		v, _ := strconv.ParseFloat(kline.Volume, 64)
 		ot := time.Unix(int64(kline.StartTime/1000), 0).UTC()
 		ct := time.Unix(int64(kline.EndTime/1000), 0).UTC()
-		candle, err := q.Sync(symbol, interval, o, h, l, c, v, ot, ct)
+		candle, err := q.Sync(lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
 		if err != nil {
 			return
 		}
@@ -228,13 +234,19 @@ func (q *Quote) SyncBinanceSpot(symbol string, interval Interval, update CandleC
 	errHandler := func(err error) {
 		fmt.Println(err)
 	}
-	doneC, _, err = binance.WsKlineServe(symbol, string(interval), wsKlineHandler, errHandler)
+	doneC, _, err = binance.WsKlineServe(lastCandle.Symbol, string(lastCandle.Interval), wsKlineHandler, errHandler)
 
 	return
 }
 
 // Will sync quote with latest binance futures kline info.
-func (q *Quote) SyncBinanceFutures(symbol string, interval Interval, update CandleChannel) (doneC chan struct{}, err error) {
+func (q *Quote) SyncBinanceFutures(update CandleChannel) (doneC chan struct{}, err error) {
+	quote := *q
+	if len(quote) == 0 {
+		return nil, errors.New("won't be able to sync an empty quote")
+	}
+
+	lastCandle := quote[len(quote)-1]
 	wsKlineHandler := func(event *futures.WsKlineEvent) {
 		kline := event.Kline
 		o, _ := strconv.ParseFloat(kline.Open, 64)
@@ -244,7 +256,7 @@ func (q *Quote) SyncBinanceFutures(symbol string, interval Interval, update Cand
 		v, _ := strconv.ParseFloat(kline.Volume, 64)
 		ot := time.Unix(int64(kline.StartTime/1000), 0).UTC()
 		ct := time.Unix(int64(kline.EndTime/1000), 0).UTC()
-		candle, err := q.Sync(symbol, interval, o, h, l, c, v, ot, ct)
+		candle, err := q.Sync(lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
 		if err != nil {
 			return
 		}
@@ -253,13 +265,19 @@ func (q *Quote) SyncBinanceFutures(symbol string, interval Interval, update Cand
 	errHandler := func(err error) {
 		fmt.Println(err)
 	}
-	doneC, _, err = futures.WsKlineServe(symbol, string(interval), wsKlineHandler, errHandler)
+	doneC, _, err = futures.WsKlineServe(lastCandle.Symbol, string(lastCandle.Interval), wsKlineHandler, errHandler)
 
 	return
 }
 
 // Will sync quote with latest binance spot kline info.
-func (q *Quote) SyncBinanceDelivery(symbol string, interval Interval, update CandleChannel) (doneC chan struct{}, err error) {
+func (q *Quote) SyncBinanceDelivery(update CandleChannel) (doneC chan struct{}, err error) {
+	quote := *q
+	if len(quote) == 0 {
+		return nil, errors.New("won't be able to sync an empty quote")
+	}
+
+	lastCandle := quote[len(quote)-1]
 	wsKlineHandler := func(event *delivery.WsKlineEvent) {
 		kline := event.Kline
 		o, _ := strconv.ParseFloat(kline.Open, 64)
@@ -269,7 +287,7 @@ func (q *Quote) SyncBinanceDelivery(symbol string, interval Interval, update Can
 		v, _ := strconv.ParseFloat(kline.Volume, 64)
 		ot := time.Unix(int64(kline.StartTime/1000), 0).UTC()
 		ct := time.Unix(int64(kline.EndTime/1000), 0).UTC()
-		candle, err := q.Sync(symbol, interval, o, h, l, c, v, ot, ct)
+		candle, err := q.Sync(lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
 		if err != nil {
 			return
 		}
@@ -278,7 +296,7 @@ func (q *Quote) SyncBinanceDelivery(symbol string, interval Interval, update Can
 	errHandler := func(err error) {
 		fmt.Println(err)
 	}
-	doneC, _, err = delivery.WsKlineServe(symbol, string(interval), wsKlineHandler, errHandler)
+	doneC, _, err = delivery.WsKlineServe(lastCandle.Symbol, string(lastCandle.Interval), wsKlineHandler, errHandler)
 
 	return
 }
