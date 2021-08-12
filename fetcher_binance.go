@@ -151,16 +151,27 @@ func NewQuoteFromBinanceDelivery(apiKey, secretKey, symbol string, interval Inte
 	return q, nil
 }
 
-// Fetch all spot candles after last candle including itself.
-func (q *Quote) RefreshBinanceSpot(apiKey, secretKey string) error {
+// Fetch all candles after last candle including itself.
+func (q *Quote) RefreshBinance(apiKey, secretKey string) error {
 	quote := *q
 	if len(quote) == 0 {
 		return errors.New("won't be able to refresh an empty quote")
 	}
 
-	lastCandle := quote[len(quote)-1]
-	openTime := lastCandle.Opentime.Unix()
-	fetchedQuote, err := NewQuoteFromBinanceSpot(apiKey, secretKey, lastCandle.Symbol, lastCandle.Interval, openTime)
+	var (
+		lastCandle   = quote[len(quote)-1]
+		openTime     = lastCandle.Opentime.Unix()
+		fetchedQuote *Quote
+		err          error
+	)
+	switch lastCandle.Market {
+	case MarketSpot:
+		fetchedQuote, err = NewQuoteFromBinanceSpot(apiKey, secretKey, lastCandle.Symbol, lastCandle.Interval, openTime)
+	case MarketFutures:
+		fetchedQuote, err = NewQuoteFromBinanceFutures(apiKey, secretKey, lastCandle.Symbol, lastCandle.Interval, openTime)
+	case MarketDelivery:
+		fetchedQuote, err = NewQuoteFromBinanceDelivery(apiKey, secretKey, lastCandle.Symbol, lastCandle.Interval, openTime)
+	}
 	if err != nil {
 		return err
 	}

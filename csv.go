@@ -60,7 +60,7 @@ func (q Quote) WriteToCsv(filename string, indicators ...string) error {
 
 	// need our file
 	if filename == "" {
-		filename = fmt.Sprintf("%s-%s-%s.csv", q[0].Symbol, q[0].Interval, q[0].Market)
+		filename = fmt.Sprintf("%s:%s-%s.csv", q[0].Market, q[0].Symbol, q[0].Interval)
 	}
 
 	// open or create the file
