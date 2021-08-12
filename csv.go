@@ -12,7 +12,7 @@ import (
 // Returns csv row of the candle.
 func (c *Candle) Csv(indicators ...string) (csv string) {
 	// first basic records
-	csv = fmt.Sprintf("%s,%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s", c.Market, c.Symbol, c.Interval, c.Open, c.High, c.Low, c.Close, c.Volume, c.Score, c.Opentime.UTC().Format(time.RFC3339), c.Closetime.UTC().Format(time.RFC3339))
+	csv = fmt.Sprintf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s", c.Open, c.High, c.Low, c.Close, c.Volume, c.Score, c.Opentime.UTC().Format(time.RFC3339), c.Closetime.UTC().Format(time.RFC3339))
 
 	// get indicators values too
 	if len(indicators) > 0 {
@@ -30,11 +30,11 @@ func (c *Candle) Csv(indicators ...string) (csv string) {
 
 // Returns csv formated string of whole quote.
 func (q Quote) Csv(indicators ...string) (csv string) {
-	if len(q) == 0 {
+	if len(q.Candles) == 0 {
 		return
 	}
 	// fix the headers
-	headers := []string{"Market", "Symbol", "Interval", "Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time"}
+	headers := []string{"Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time"}
 	var indicatorNames []string
 	if len(indicators) > 0 {
 		indicatorNames = indicators
@@ -44,7 +44,7 @@ func (q Quote) Csv(indicators ...string) (csv string) {
 	headers = append(headers, indicatorNames...)
 	csv = strings.Join(headers, ",") + "\n"
 	// get each candle csv value
-	for _, candle := range q {
+	for _, candle := range q.Candles {
 		// and also add the indicators as well
 		csv += fmt.Sprintln(candle.Csv(indicatorNames...))
 	}
@@ -54,13 +54,13 @@ func (q Quote) Csv(indicators ...string) (csv string) {
 
 // Writes down whole quote into a csv file.
 func (q Quote) WriteToCsv(filename string, indicators ...string) error {
-	if len(q) == 0 {
+	if len(q.Candles) == 0 {
 		return ErrNotEnoughCandles
 	}
 
 	// need our file
 	if filename == "" {
-		filename = fmt.Sprintf("%s:%s-%s.csv", q[0].Market, q[0].Symbol, q[0].Interval)
+		filename = fmt.Sprintf("%s:%s-%s.csv", q.Market, q.Symbol, q.Interval)
 	}
 
 	// open or create the file
@@ -79,7 +79,7 @@ func (q Quote) WriteToCsv(filename string, indicators ...string) error {
 }
 
 // Read quote from csv file.
-func NewQuoteFromCsv(filename string) (*Quote, error) {
+func NewQuoteFromCsv(filename string, market MarketType, symbol string, interval Interval) (*Quote, error) {
 	csvFile, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -96,17 +96,18 @@ func NewQuoteFromCsv(filename string) (*Quote, error) {
 	indicatorsMap := make(map[string]int)
 	for i, header := range headers {
 		switch header {
-		case "Market", "Symbol", "Interval", "Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time":
+		case "Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time":
 			indexMap[header] = i
 		default:
 			indicatorsMap[header] = i
 		}
 	}
-	var quote Quote
+	quote := Quote{
+		Market:   market,
+		Symbol:   symbol,
+		Interval: interval,
+	}
 	for _, line := range csvLines {
-		market := MarketType(line[indexMap["Market"]])
-		symbol := line[indexMap["Symbol"]]
-		interval := Interval(line[indexMap["Interval"]])
 		open, _ := strconv.ParseFloat(line[indexMap["Open"]], 64)
 		high, _ := strconv.ParseFloat(line[indexMap["High"]], 64)
 		low, _ := strconv.ParseFloat(line[indexMap["Low"]], 64)
@@ -114,7 +115,7 @@ func NewQuoteFromCsv(filename string) (*Quote, error) {
 		volume, _ := strconv.ParseFloat(line[indexMap["Volume"]], 64)
 		openTime, _ := time.Parse(time.RFC3339, line[indexMap["Open time"]])
 		closeTime, _ := time.Parse(time.RFC3339, line[indexMap["Close time"]])
-		candle, err := NewCandle(market, symbol, open, high, low, close, volume, openTime, closeTime, interval, nil, nil)
+		candle, err := NewCandle(open, high, low, close, volume, openTime, closeTime, nil, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -124,7 +125,7 @@ func NewQuoteFromCsv(filename string) (*Quote, error) {
 			candle.Indicators[indicator], _ = strconv.ParseFloat(line[index], 64)
 		}
 
-		quote = append(quote, candle)
+		quote.Candles = append(quote.Candles, candle)
 	}
 
 	q := &quote

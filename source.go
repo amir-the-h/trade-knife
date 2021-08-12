@@ -56,8 +56,9 @@ func (c *Candle) Get(source Source) float64 {
 
 // Retrieve value of target field on all candles.
 func (q *Quote) Get(source Source) []float64 {
-	result := make([]float64, len(*q))
-	for i, candle := range *q {
+	quote := *q
+	result := make([]float64, len(quote.Candles))
+	for i, candle := range quote.Candles {
 		result[i] = candle.Get(source)
 	}
 

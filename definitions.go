@@ -7,6 +7,7 @@ import "errors"
 type EnterSignal struct {
 	Score      float64
 	Cause      EnterCause
+	Symbol     string
 	Candle     *Candle
 	Quote      float64
 	TakeProfit float64

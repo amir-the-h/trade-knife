@@ -16,9 +16,9 @@ import (
 
 // Returns a writer of candlestick plot image.
 func Plot(quote Quote, width, height vg.Length, extension string, indicators []string) (io.WriterTo, error) {
-	data := make(custplotter.TOHLCVs, len(quote))
+	data := make(custplotter.TOHLCVs, len(quote.Candles))
 
-	for i, candle := range quote {
+	for i, candle := range quote.Candles {
 		data[i].T = float64(candle.Opentime.Unix())
 		data[i].O = candle.Open
 		data[i].H = candle.High
@@ -28,7 +28,7 @@ func Plot(quote Quote, width, height vg.Length, extension string, indicators []s
 
 	plt := plot.New()
 
-	plt.Title.Text = fmt.Sprintf("%s %s", quote[0].Symbol, quote[0].Interval)
+	plt.Title.Text = fmt.Sprintf("%s %s", quote.Symbol, quote.Interval)
 	plt.X.Label.Text = "Time"
 	plt.Y.Label.Text = "USDT"
 
@@ -59,13 +59,11 @@ func Plot(quote Quote, width, height vg.Length, extension string, indicators []s
 
 // Draw indicators on the main plot.
 func plotIndicators(plt *plot.Plot, quote Quote, indicator string) {
-	if len(quote) == 0 {
+	if len(quote.Candles) == 0 {
 		return
 	}
-	market := quote[0].Market
-	symbol := quote[0].Symbol
 	plot := plotter.NewFunction(func(f float64) float64 {
-		candle, _ := quote.Find(market, symbol, int64(f))
+		candle, _ := quote.Find(int64(f))
 		if candle == nil {
 			return 0
 		}
@@ -75,7 +73,7 @@ func plotIndicators(plt *plot.Plot, quote Quote, indicator string) {
 		}
 		return v
 	})
-	plot.Samples = len(quote)
+	plot.Samples = len(quote.Candles)
 	plot.Color = color.RGBA{R: uint8(rand.Intn(255)), G: uint8(rand.Intn(255)), B: uint8(rand.Intn(255)), A: 255}
 
 	plt.Add(plot)

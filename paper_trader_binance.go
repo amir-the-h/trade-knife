@@ -99,7 +99,7 @@ func (pt *PaperTrader) EntryWatcher() {
 		}
 
 		base := "USDT"
-		symbol := strings.ReplaceAll(enterSignal.Candle.Symbol, base, "")
+		symbol := strings.ReplaceAll(enterSignal.Symbol, base, "")
 		trade := pt.Open("", symbol, base, enterSignal.Quote, enterSignal.Candle.Close, position, enterSignal.Stoploss, enterSignal.TakeProfit, enterSignal.Candle)
 		pt.activeTrade = trade
 		if pt.Debug {
