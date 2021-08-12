@@ -6,6 +6,7 @@ import (
 
 // Candle is the main structure which contains a group of useful candlestick data.
 type Candle struct {
+	Market     MarketType         `json:"market"`
 	Symbol     string             `json:"symbol"`
 	Open       float64            `json:"open"`
 	High       float64            `json:"high"`
@@ -22,13 +23,14 @@ type Candle struct {
 }
 
 // Returns a pointer to a fresh candle with provided data.
-func NewCandle(symbol string, open, high, low, close, volume float64, openTime, closeTime time.Time, interval Interval, previous, next *Candle) (candle *Candle, err CandleError) {
+func NewCandle(market MarketType, symbol string, open, high, low, close, volume float64, openTime, closeTime time.Time, interval Interval, previous, next *Candle) (candle *Candle, err CandleError) {
 	if high < low || high < open || high < close || low > open || low > close {
 		err = ErrInvalidCandleData
 		return
 	}
 
 	candle = &Candle{
+		Market:     market,
 		Symbol:     symbol,
 		Open:       open,
 		High:       high,

@@ -10,10 +10,10 @@ import (
 type Quote []*Candle
 
 // Search for a candle and it's index amoung Quote by it's symbol and provided timestamp.
-func (q *Quote) Find(symbol string, timestamp int64) (*Candle, int) {
+func (q *Quote) Find(market MarketType, symbol string, timestamp int64) (*Candle, int) {
 	quote := *q
 	for i, candle := range quote {
-		if candle.Opentime.Unix() == timestamp || (candle.Opentime.Unix() < timestamp && candle.Closetime.Unix() > timestamp) {
+		if candle.Market == market && candle.Symbol == symbol && (candle.Opentime.Unix() == timestamp || (candle.Opentime.Unix() < timestamp && candle.Closetime.Unix() > timestamp)) {
 			return candle, i
 		}
 	}
@@ -40,11 +40,11 @@ func (q *Quote) Sort() {
 // it will append to end of the quote.
 //
 // If you want to update a candle directly then pass sCandle
-func (q *Quote) Sync(symbol string, interval Interval, open, high, low, close, volume float64, openTime, closeTime time.Time, sCandle ...*Candle) (candle *Candle, err CandleError) {
+func (q *Quote) Sync(market MarketType, symbol string, interval Interval, open, high, low, close, volume float64, openTime, closeTime time.Time, sCandle ...*Candle) (candle *Candle, err CandleError) {
 	var lc *Candle
 	quote := *q
-	checker := func(candle *Candle, openTime, closeTime time.Time) bool {
-		return candle.Opentime.Equal(openTime) && candle.Closetime.Equal(closeTime)
+	checker := func(candle *Candle, market MarketType, openTime, closeTime time.Time) bool {
+		return candle.Opentime.Equal(openTime) && candle.Closetime.Equal(closeTime) && candle.Market == market
 	}
 	// try last candle first
 	if len(quote) > 0 {
@@ -57,10 +57,10 @@ func (q *Quote) Sync(symbol string, interval Interval, open, high, low, close, v
 		candle = sCandle[0]
 	}
 
-	if candle == nil || !checker(candle, openTime, closeTime) {
-		candle, _ = quote.Find(symbol, openTime.Unix())
+	if candle == nil || !checker(candle, market, openTime, closeTime) {
+		candle, _ = quote.Find(market, symbol, openTime.Unix())
 		if candle == nil {
-			candle, err = NewCandle(symbol, open, high, low, close, volume, openTime, closeTime, interval, lc, nil)
+			candle, err = NewCandle(market, symbol, open, high, low, close, volume, openTime, closeTime, interval, lc, nil)
 			if err != nil {
 				return
 			}
@@ -106,7 +106,7 @@ func (q *Quote) IndicatorNames() []string {
 func (q *Quote) Merge(target *Quote) {
 	quote := *q
 	for _, candle := range *target {
-		c, i := quote.Find(candle.Symbol, candle.Opentime.Unix())
+		c, i := quote.Find(candle.Market, candle.Symbol, candle.Opentime.Unix())
 		if c != nil {
 			quote[i] = candle
 		} else {

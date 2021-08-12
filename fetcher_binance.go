@@ -41,7 +41,7 @@ func NewQuoteFromBinanceSpot(apiKey, secretKey, symbol string, interval Interval
 		}
 
 		for _, kline := range klines {
-			candle, err := createCandleFromKline(symbol, kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, interval, kline.OpenTime, kline.CloseTime)
+			candle, err := createCandleFromKline(MarketSpot, symbol, kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, interval, kline.OpenTime, kline.CloseTime)
 			if err != nil {
 				return &quote, err
 			}
@@ -87,7 +87,7 @@ func NewQuoteFromBinanceFutures(apiKey, secretKey, symbol string, interval Inter
 		}
 
 		for _, kline := range klines {
-			candle, err := createCandleFromKline(symbol, kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, interval, kline.OpenTime, kline.CloseTime)
+			candle, err := createCandleFromKline(MarketFutures, symbol, kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, interval, kline.OpenTime, kline.CloseTime)
 			if err != nil {
 				return &quote, err
 			}
@@ -133,7 +133,7 @@ func NewQuoteFromBinanceDelivery(apiKey, secretKey, symbol string, interval Inte
 		}
 
 		for _, kline := range klines {
-			candle, err := createCandleFromKline(symbol, kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, interval, kline.OpenTime, kline.CloseTime)
+			candle, err := createCandleFromKline(MarketDelivery, symbol, kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, interval, kline.OpenTime, kline.CloseTime)
 			if err != nil {
 				return &quote, err
 			}
@@ -225,7 +225,7 @@ func (q *Quote) SyncBinanceSpot(update CandleChannel) (doneC chan struct{}, err 
 		v, _ := strconv.ParseFloat(kline.Volume, 64)
 		ot := time.Unix(int64(kline.StartTime/1000), 0).UTC()
 		ct := time.Unix(int64(kline.EndTime/1000), 0).UTC()
-		candle, err := q.Sync(lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
+		candle, err := q.Sync(lastCandle.Market, lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
 		if err != nil {
 			return
 		}
@@ -256,7 +256,7 @@ func (q *Quote) SyncBinanceFutures(update CandleChannel) (doneC chan struct{}, e
 		v, _ := strconv.ParseFloat(kline.Volume, 64)
 		ot := time.Unix(int64(kline.StartTime/1000), 0).UTC()
 		ct := time.Unix(int64(kline.EndTime/1000), 0).UTC()
-		candle, err := q.Sync(lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
+		candle, err := q.Sync(lastCandle.Market, lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
 		if err != nil {
 			return
 		}
@@ -287,7 +287,7 @@ func (q *Quote) SyncBinanceDelivery(update CandleChannel) (doneC chan struct{}, 
 		v, _ := strconv.ParseFloat(kline.Volume, 64)
 		ot := time.Unix(int64(kline.StartTime/1000), 0).UTC()
 		ct := time.Unix(int64(kline.EndTime/1000), 0).UTC()
-		candle, err := q.Sync(lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
+		candle, err := q.Sync(lastCandle.Market, lastCandle.Symbol, lastCandle.Interval, o, h, l, c, v, ot, ct)
 		if err != nil {
 			return
 		}
@@ -301,7 +301,7 @@ func (q *Quote) SyncBinanceDelivery(update CandleChannel) (doneC chan struct{}, 
 	return
 }
 
-func createCandleFromKline(symbol string, open, high, low, close, volume string, interval Interval, openTime, closeTime int64) (candle *Candle, err error) {
+func createCandleFromKline(market MarketType, symbol string, open, high, low, close, volume string, interval Interval, openTime, closeTime int64) (candle *Candle, err error) {
 	ot := time.Unix(int64(openTime/1000), 0).UTC()
 	ct := time.Unix(int64(closeTime/1000), 0).UTC()
 	o, err := strconv.ParseFloat(open, 64)
@@ -329,6 +329,6 @@ func createCandleFromKline(symbol string, open, high, low, close, volume string,
 		return
 	}
 
-	candle, err = NewCandle(symbol, o, h, l, c, v, ot, ct, interval, nil, nil)
+	candle, err = NewCandle(market, symbol, o, h, l, c, v, ot, ct, interval, nil, nil)
 	return
 }

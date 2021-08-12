@@ -12,7 +12,7 @@ import (
 // Returns csv row of the candle.
 func (c *Candle) Csv(indicators ...string) (csv string) {
 	// first basic records
-	csv = fmt.Sprintf("%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s", c.Symbol, c.Interval, c.Open, c.High, c.Low, c.Close, c.Volume, c.Score, c.Opentime.UTC().Format(time.RFC3339), c.Closetime.UTC().Format(time.RFC3339))
+	csv = fmt.Sprintf("%s,%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s", c.Market, c.Symbol, c.Interval, c.Open, c.High, c.Low, c.Close, c.Volume, c.Score, c.Opentime.UTC().Format(time.RFC3339), c.Closetime.UTC().Format(time.RFC3339))
 
 	// get indicators values too
 	if len(indicators) > 0 {
@@ -34,7 +34,7 @@ func (q Quote) Csv(indicators ...string) (csv string) {
 		return
 	}
 	// fix the headers
-	headers := []string{"Symbol", "Interval", "Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time"}
+	headers := []string{"Market", "Symbol", "Interval", "Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time"}
 	var indicatorNames []string
 	if len(indicators) > 0 {
 		indicatorNames = indicators
@@ -60,7 +60,7 @@ func (q Quote) WriteToCsv(filename string, indicators ...string) error {
 
 	// need our file
 	if filename == "" {
-		filename = fmt.Sprintf("%s-%s.csv", q[0].Symbol, q[0].Interval)
+		filename = fmt.Sprintf("%s-%s-%s.csv", q[0].Symbol, q[0].Interval, q[0].Market)
 	}
 
 	// open or create the file
@@ -96,7 +96,7 @@ func NewQuoteFromCsv(filename string) (*Quote, error) {
 	indicatorsMap := make(map[string]int)
 	for i, header := range headers {
 		switch header {
-		case "Symbol", "Interval", "Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time":
+		case "Market", "Symbol", "Interval", "Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time":
 			indexMap[header] = i
 		default:
 			indicatorsMap[header] = i
@@ -104,6 +104,7 @@ func NewQuoteFromCsv(filename string) (*Quote, error) {
 	}
 	var quote Quote
 	for _, line := range csvLines {
+		market := MarketType(line[indexMap["Market"]])
 		symbol := line[indexMap["Symbol"]]
 		interval := Interval(line[indexMap["Interval"]])
 		open, _ := strconv.ParseFloat(line[indexMap["Open"]], 64)
@@ -113,7 +114,7 @@ func NewQuoteFromCsv(filename string) (*Quote, error) {
 		volume, _ := strconv.ParseFloat(line[indexMap["Volume"]], 64)
 		openTime, _ := time.Parse(time.RFC3339, line[indexMap["Open time"]])
 		closeTime, _ := time.Parse(time.RFC3339, line[indexMap["Close time"]])
-		candle, err := NewCandle(symbol, open, high, low, close, volume, openTime, closeTime, interval, nil, nil)
+		candle, err := NewCandle(market, symbol, open, high, low, close, volume, openTime, closeTime, interval, nil, nil)
 		if err != nil {
 			return nil, err
 		}

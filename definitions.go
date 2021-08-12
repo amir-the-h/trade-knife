@@ -19,6 +19,7 @@ type ExitSignal struct {
 }
 
 type PositionType string
+type MarketType string
 type TradeStatus string
 type EnterCause string
 type ExitCause string
@@ -86,6 +87,11 @@ const (
 	ExitCauseStopLossTriggered   = ExitCause("Stop loss")
 	ExitCauseTakeProfitTriggered = ExitCause("Take profit")
 	ExitCauseMarket              = ExitCause("Market")
+
+	// Market types
+	MarketSpot     = MarketType("Spot")
+	MarketFutures  = MarketType("Futures")
+	MarketDelivery = MarketType("Delivery")
 )
 
 var (

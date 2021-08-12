@@ -62,9 +62,10 @@ func plotIndicators(plt *plot.Plot, quote Quote, indicator string) {
 	if len(quote) == 0 {
 		return
 	}
+	market := quote[0].Market
 	symbol := quote[0].Symbol
 	plot := plotter.NewFunction(func(f float64) float64 {
-		candle, _ := quote.Find(symbol, int64(f))
+		candle, _ := quote.Find(market, symbol, int64(f))
 		if candle == nil {
 			return 0
 		}
