@@ -41,3 +41,7 @@ out:
 
 	return
 }
+
+func (af *AutoFibo) Is(tag IndicatorTag) bool {
+	return af.Tag == tag
+}

@@ -44,3 +44,7 @@ out:
 
 	return
 }
+
+func (hp *Hp) Is(tag IndicatorTag) bool {
+	return hp.Tag == tag
+}

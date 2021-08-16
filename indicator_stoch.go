@@ -3,6 +3,7 @@ package trade_knife
 import "github.com/markcheno/go-talib"
 
 type Stoch struct {
+	Tag           IndicatorTag `mapstructure:"tag"`
 	KTag          IndicatorTag `mapstructure:"kTag"`
 	DTag          IndicatorTag `mapstructure:"dTag"`
 	InFastKPeriod int          `mapstructure:"kLength"`
@@ -40,4 +41,8 @@ out:
 	q.AddIndicator(s.DTag, d)
 
 	return
+}
+
+func (s *Stoch) Is(tag IndicatorTag) bool {
+	return s.Tag == tag
 }

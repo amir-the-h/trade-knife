@@ -45,3 +45,7 @@ out:
 
 	return
 }
+
+func (ma *Ma) Is(tag IndicatorTag) bool {
+	return ma.Tag == tag
+}
