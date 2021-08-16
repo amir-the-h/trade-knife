@@ -88,25 +88,25 @@ func (q *Quote) Sync(open, high, low, close, volume float64, openTime, closeTime
 }
 
 // Returns a list of indicators used in quote.
-func (q *Quote) IndicatorNames() []string {
-	indicators := []string{}
+func (q *Quote) IndicatorTags() []IndicatorTag {
+	tags := []IndicatorTag{}
 	quote := *q
 	for _, candle := range quote.Candles {
 		for indicator := range candle.Indicators {
 			hasIndicator := false
-			for _, name := range indicators {
-				if name == indicator {
+			for _, tag := range tags {
+				if tag == indicator {
 					hasIndicator = true
 					break
 				}
 			}
 			if !hasIndicator {
-				indicators = append(indicators, indicator)
+				tags = append(tags, indicator)
 			}
 		}
 	}
 
-	return indicators
+	return tags
 }
 
 // Merge target quote into the current quote, rewrite duplicates and sort it.
@@ -125,15 +125,15 @@ func (q *Quote) Merge(target *Quote) {
 	*q = quote
 }
 
-// Add indicator values by the given name into the quote.
-func (q *Quote) AddIndicator(name string, values []float64) error {
+// Add indicator values by the given tag into the quote.
+func (q *Quote) AddIndicator(tag IndicatorTag, values []float64) error {
 	quote := *q
 	if len(values) != len(quote.Candles) {
 		return errors.New("count mismatched")
 	}
 
-	for i, candle := range quote.Candles {
-		candle.Indicators[name] = values[i]
+	for i := range values {
+		q.Candles[i].Indicators[tag] = values[i]
 	}
 
 	return nil

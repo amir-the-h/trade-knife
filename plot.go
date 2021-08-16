@@ -15,7 +15,7 @@ import (
 )
 
 // Returns a writer of candlestick plot image.
-func Plot(quote Quote, width, height vg.Length, extension string, indicators []string) (io.WriterTo, error) {
+func Plot(quote Quote, width, height vg.Length, extension string, tags []IndicatorTag) (io.WriterTo, error) {
 	data := make(custplotter.TOHLCVs, len(quote.Candles))
 
 	for i, candle := range quote.Candles {
@@ -40,8 +40,8 @@ func Plot(quote Quote, width, height vg.Length, extension string, indicators []s
 	grid := plotter.NewGrid()
 	plt.Add(bars, grid)
 	plt.X.Tick.Marker = plot.TimeTicks{Format: "2006-01-02\n15:04"}
-	for _, indicator := range indicators {
-		plotIndicators(plt, quote, indicator)
+	for _, tag := range tags {
+		plotIndicators(plt, quote, tag)
 	}
 	plt.Legend.ThumbnailWidth = width * 0.1
 	plt.Legend.Top = true
@@ -58,7 +58,7 @@ func Plot(quote Quote, width, height vg.Length, extension string, indicators []s
 }
 
 // Draw indicators on the main plot.
-func plotIndicators(plt *plot.Plot, quote Quote, indicator string) {
+func plotIndicators(plt *plot.Plot, quote Quote, tag IndicatorTag) {
 	if len(quote.Candles) == 0 {
 		return
 	}
@@ -67,7 +67,7 @@ func plotIndicators(plt *plot.Plot, quote Quote, indicator string) {
 		if candle == nil {
 			return 0
 		}
-		v, ok := candle.Indicators[indicator]
+		v, ok := candle.Indicators[tag]
 		if !ok {
 			return 0
 		}
@@ -77,7 +77,7 @@ func plotIndicators(plt *plot.Plot, quote Quote, indicator string) {
 	plot.Color = color.RGBA{R: uint8(rand.Intn(255)), G: uint8(rand.Intn(255)), B: uint8(rand.Intn(255)), A: 255}
 
 	plt.Add(plot)
-	plt.Legend.Add(indicator, plot)
+	plt.Legend.Add(string(tag), plot)
 }
 
 // TODO: Add signal plotter

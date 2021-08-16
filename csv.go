@@ -10,7 +10,7 @@ import (
 )
 
 // Returns csv row of the candle.
-func (c *Candle) Csv(indicators ...string) (csv string) {
+func (c *Candle) Csv(indicators ...IndicatorTag) (csv string) {
 	// first basic records
 	csv = fmt.Sprintf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s", c.Open, c.High, c.Low, c.Close, c.Volume, c.Score, c.Opentime.UTC().Format(time.RFC3339), c.Closetime.UTC().Format(time.RFC3339))
 
@@ -29,31 +29,33 @@ func (c *Candle) Csv(indicators ...string) (csv string) {
 }
 
 // Returns csv formated string of whole quote.
-func (q Quote) Csv(indicators ...string) (csv string) {
+func (q Quote) Csv(indicators ...IndicatorTag) (csv string) {
 	if len(q.Candles) == 0 {
 		return
 	}
 	// fix the headers
 	headers := []string{"Open", "High", "Low", "Close", "Volume", "Score", "Open time", "Close time"}
-	var indicatorNames []string
+	var indicatorTags []IndicatorTag
 	if len(indicators) > 0 {
-		indicatorNames = indicators
+		indicatorTags = indicators
 	} else {
-		indicatorNames = q.IndicatorNames()
+		indicatorTags = q.IndicatorTags()
 	}
-	headers = append(headers, indicatorNames...)
+	for _, indicatorTag := range indicatorTags {
+		headers = append(headers, string(indicatorTag))
+	}
 	csv = strings.Join(headers, ",") + "\n"
 	// get each candle csv value
 	for _, candle := range q.Candles {
 		// and also add the indicators as well
-		csv += fmt.Sprintln(candle.Csv(indicatorNames...))
+		csv += fmt.Sprintln(candle.Csv(indicatorTags...))
 	}
 
 	return
 }
 
 // Writes down whole quote into a csv file.
-func (q Quote) WriteToCsv(filename string, indicators ...string) error {
+func (q Quote) WriteToCsv(filename string, indicators ...IndicatorTag) error {
 	if len(q.Candles) == 0 {
 		return ErrNotEnoughCandles
 	}
@@ -122,7 +124,7 @@ func NewQuoteFromCsv(filename string, market MarketType, symbol string, interval
 		candle.Score, _ = strconv.ParseFloat(line[indexMap["Score"]], 64)
 
 		for indicator, index := range indicatorsMap {
-			candle.Indicators[indicator], _ = strconv.ParseFloat(line[index], 64)
+			candle.Indicators[IndicatorTag(indicator)], _ = strconv.ParseFloat(line[index], 64)
 		}
 
 		quote.Candles = append(quote.Candles, candle)

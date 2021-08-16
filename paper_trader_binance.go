@@ -50,15 +50,18 @@ func (pt *PaperTrader) Start() TradeError {
 }
 
 // Create a new trade immediately.
-func (pt *PaperTrader) Open(id, symbol, base string, quote, entry float64, position PositionType, sl, tp float64, openCandle *Candle) *Trade {
-	trade := NewTrade(id, "PaperTrader Papertrade", symbol, base, quote, entry, position, sl, tp, openCandle)
+func (pt *PaperTrader) Open(id, symbol, base string, position PositionType, quote, entry, sl, tp float64, openCandle *Candle) *Trade {
+	trade := NewTrade(id, "PaperTrader Papertrade", symbol, base, position, quote, entry, sl, tp, openCandle)
 	pt.Trades = append(pt.Trades, trade)
 	return trade
 }
 
-// Close an open trade immediately.
-func (pt *PaperTrader) Close(id, exit float64, closeCandle *Candle) {
-
+func (pt *PaperTrader) Close(id string, exit float64, closeCandle *Candle) {
+	for _, trade := range pt.Trades {
+		if trade.Id == id {
+			trade.Close(exit, closeCandle)
+		}
+	}
 }
 
 // Watch for entry signals and open proper positions.
@@ -100,7 +103,7 @@ func (pt *PaperTrader) EntryWatcher() {
 
 		base := "USDT"
 		symbol := strings.ReplaceAll(enterSignal.Symbol, base, "")
-		trade := pt.Open("", symbol, base, enterSignal.Quote, enterSignal.Candle.Close, position, enterSignal.Stoploss, enterSignal.TakeProfit, enterSignal.Candle)
+		trade := pt.Open("", symbol, base, position, enterSignal.Quote, enterSignal.Candle.Close, enterSignal.Stoploss, enterSignal.TakeProfit, enterSignal.Candle)
 		pt.activeTrade = trade
 		if pt.Debug {
 			log.Printf("💰 Trade started by score %f casued %s\n%s", enterSignal.Candle.Score, enterSignal.Cause, *trade)
@@ -162,7 +165,7 @@ func (pt *PaperTrader) CloseWatcher() {
 	}
 	for exitSignal := range pt.exitChannel {
 		// close the trade
-		exitSignal.Trade.Close(exitSignal.Candle.Close, exitSignal.Candle)
+		pt.Close(exitSignal.Trade.Id, exitSignal.Candle.Close, exitSignal.Candle)
 		// and remove it from active trades
 		if pt.Debug {
 			icon := "📈"

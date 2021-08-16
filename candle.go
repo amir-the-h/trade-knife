@@ -6,17 +6,17 @@ import (
 
 // Candle is the main structure which contains a group of useful candlestick data.
 type Candle struct {
-	Open       float64            `json:"open"`
-	High       float64            `json:"high"`
-	Low        float64            `json:"low"`
-	Close      float64            `json:"close"`
-	Volume     float64            `json:"volume"`
-	Score      float64            `json:"score"`
-	Indicators map[string]float64 `json:"indicators"`
-	Opentime   time.Time          `json:"open_time"`
-	Closetime  time.Time          `json:"close_time"`
-	Next       *Candle            `json:"-"`
-	Previous   *Candle            `json:"-"`
+	Open       float64                  `json:"open"`
+	High       float64                  `json:"high"`
+	Low        float64                  `json:"low"`
+	Close      float64                  `json:"close"`
+	Volume     float64                  `json:"volume"`
+	Score      float64                  `json:"score"`
+	Indicators map[IndicatorTag]float64 `json:"indicators"`
+	Opentime   time.Time                `json:"open_time"`
+	Closetime  time.Time                `json:"close_time"`
+	Next       *Candle                  `json:"-"`
+	Previous   *Candle                  `json:"-"`
 }
 
 // Returns a pointer to a fresh candle with provided data.
@@ -34,7 +34,7 @@ func NewCandle(open, high, low, close, volume float64, openTime, closeTime time.
 		Volume:     volume,
 		Opentime:   openTime,
 		Closetime:  closeTime,
-		Indicators: make(map[string]float64),
+		Indicators: make(map[IndicatorTag]float64),
 		Previous:   previous,
 		Next:       next,
 	}
@@ -43,6 +43,6 @@ func NewCandle(open, high, low, close, volume float64, openTime, closeTime time.
 }
 
 // Add indicator value by the given name into the candle.
-func (c *Candle) AddIndicator(name string, value float64) {
-	c.Indicators[name] = value
+func (c *Candle) AddIndicator(tag IndicatorTag, value float64) {
+	c.Indicators[tag] = value
 }

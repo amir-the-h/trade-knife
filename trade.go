@@ -42,7 +42,7 @@ func (t Trades) Find(id string) (*Trade, int) {
 
 // Interface to determine how a trader should implements.
 type Trader interface {
-	Open(id, symbol, base string, quote, entry float64, position PositionType, sl, tp float64, openCandle *Candle) *Trade
+	Open(id, symbol, base string, position PositionType, quote, entry float64, sl, tp float64, openCandle *Candle) *Trade
 	Close(id, exit float64, closeCandle *Candle)
 	EntryWatcher()
 	ExitWatcher()
@@ -50,19 +50,19 @@ type Trader interface {
 }
 
 // returns a pointer to a fresh trade.
-func NewTrade(id, driver, symbol, base string, quote, entry float64, position PositionType, sl, tp float64, openCandle *Candle) *Trade {
-	var TakeProfitPrice, StopLossPrice float64
+func NewTrade(id, driver, symbol, base string, position PositionType, quote, entry float64, sl, tp float64, openCandle *Candle) *Trade {
+	var takeProfitPercent, stopLossPercent float64
 	now := time.Now().UTC()
 	amount := quote / entry
-	if position == PositionBuy {
-		TakeProfitPrice = entry + (quote * tp / 100)
-		StopLossPrice = entry - (quote * sl / 100)
-	} else {
-		TakeProfitPrice = entry - (quote * tp / 100)
-		StopLossPrice = entry + (quote * sl / 100)
-	}
 	if id == "" {
 		id = fmt.Sprint(now.Unix())
+	}
+	if position == PositionBuy {
+		takeProfitPercent = (100 * tp / entry) - 100
+		stopLossPercent = 100 - (100 * sl / entry)
+	} else {
+		takeProfitPercent = 100 - (100 * tp / entry)
+		stopLossPercent = (100 * sl / entry) - 100
 	}
 
 	return &Trade{
@@ -74,10 +74,10 @@ func NewTrade(id, driver, symbol, base string, quote, entry float64, position Po
 		Amount:            amount,
 		Entry:             entry,
 		Position:          position,
-		StopLossPercent:   sl,
-		StopLossPrice:     StopLossPrice,
-		TakeProfitPercent: tp,
-		TakeProfitPrice:   TakeProfitPrice,
+		StopLossPercent:   stopLossPercent,
+		StopLossPrice:     sl,
+		TakeProfitPercent: takeProfitPercent,
+		TakeProfitPrice:   tp,
 		OpenAt:            &now,
 		OpenCandle:        openCandle,
 		Status:            TradeStatusOpen,

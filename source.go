@@ -47,7 +47,7 @@ func (c *Candle) Get(source Source) float64 {
 		return (c.High + c.Low + c.Close) / 3
 	}
 
-	if value, ok := c.Indicators[string(source)]; ok {
+	if value, ok := c.Indicators[IndicatorTag(source)]; ok {
 		return value
 	}
 

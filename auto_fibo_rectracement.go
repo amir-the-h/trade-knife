@@ -6,7 +6,7 @@ import (
 	"github.com/markcheno/go-talib"
 )
 
-func AutoFibo(inHigh, inLow, inClose, ratios []float64, depth int, deviation float64) []map[float64]float64 {
+func AutoFiboRectracement(inHigh, inLow, inClose, ratios []float64, depth int, deviation float64) []map[float64]float64 {
 	result := make([]map[float64]float64, len(inClose))
 
 	for i := len(inClose) - 1; i > depth*2; i-- {

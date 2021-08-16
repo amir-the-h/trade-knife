@@ -5,11 +5,8 @@ package trade_knife
 //
 // O,H,C > Indicator
 // L <= Indicator
-func (c *Candle) TouchedDownIndicator(indicator string) bool {
-	source, ok := c.Indicators[indicator]
-	if !ok {
-		return false
-	}
+func (c *Candle) TouchedDownIndicator(source Source) bool {
+	indicator := c.Get(source)
 
-	return c.Open > source && c.High > source && c.Low <= source && c.Close > source
+	return c.Open > indicator && c.High > indicator && c.Low <= indicator && c.Close > indicator
 }
