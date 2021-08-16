@@ -23,12 +23,12 @@ func AutoFiboRectracement(inHigh, inLow, inClose, ratios []float64, depth int, d
 		}
 
 		row := make(map[float64]float64)
-		row[0] = pivots[0]
-		row[100] = pivots[1]
-		diff := row[100] - row[0]
+		start := pivots[0]
+		end := pivots[1]
+		row[0] = start
+		diff := end - start
 		for _, ratio := range ratios {
-			row[ratio] = row[0] + (diff * ratio / 100)
-			row[ratio*-1] = row[0] - (diff * ratio / 100)
+			row[ratio] = start + (diff * ratio / 100)
 		}
 
 		result[i] = row

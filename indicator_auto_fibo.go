@@ -27,7 +27,7 @@ func (af *AutoFibo) Add(q *Quote, c *Candle) (ok bool) {
 
 		fibos := AutoFiboRectracement(quote.Get(SourceHigh), quote.Get(SourceLow), quote.Get(SourceClose), af.Ratios, af.Depth, af.Deviation)
 		for ratio, fibo := range fibos[len(fibos)-1] {
-			candle.AddIndicator(IndicatorTag(fmt.Sprintf("%s:%.0f", af.Tag, ratio)), fibo)
+			candle.AddIndicator(IndicatorTag(fmt.Sprintf("%s:%f", af.Tag, ratio)), fibo)
 		}
 		q.Candles[i] = candle
 
