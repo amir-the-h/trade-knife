@@ -8,7 +8,7 @@ type EnterSignal struct {
 	Score      float64
 	Cause      EnterCause
 	Symbol     string
-	Candle     *Candle
+	Candle     Candle
 	Quote      float64
 	TakeProfit float64
 	Stoploss   float64

@@ -9,7 +9,7 @@ import (
 type PaperTrader struct {
 	Trades           Trades
 	candleChannel    CandleChannel
-	enterChannel     EnterChannel
+	enteryChannel    EnterChannel
 	exitChannel      ExitChannel
 	BuyScoreTrigger  float64
 	SellScoreTrigger float64
@@ -24,7 +24,7 @@ func NewPaperTrader(candleChannel CandleChannel, entryChannel EnterChannel, buys
 	exitChannel := make(ExitChannel)
 	return &PaperTrader{
 		candleChannel:    candleChannel,
-		enterChannel:     entryChannel,
+		enteryChannel:    entryChannel,
 		exitChannel:      exitChannel,
 		BuyScoreTrigger:  buyscoreTrigger,
 		SellScoreTrigger: sellscoreTrigger,
@@ -69,7 +69,7 @@ func (pt *PaperTrader) EntryWatcher() {
 	if pt.Debug {
 		log.Println("✅", "Entry watcher started")
 	}
-	for enterSignal := range pt.enterChannel {
+	for enterSignal := range pt.enteryChannel {
 		var position PositionType
 		if enterSignal.Candle.Score >= pt.BuyScoreTrigger {
 			position = PositionBuy
@@ -82,12 +82,11 @@ func (pt *PaperTrader) EntryWatcher() {
 		// check for crossed positions
 		if pt.activeTrade != nil {
 			if pt.activeTrade.Position != position {
-				if pt.Cross || pt.CloseOnOpposite {
+				if pt.CloseOnOpposite {
 					// fire exit signal
-					trade := *pt.activeTrade
 					pt.exitChannel <- ExitSignal{
-						Trade:  &trade,
-						Candle: enterSignal.Candle,
+						Trade:  pt.activeTrade,
+						Candle: &enterSignal.Candle,
 						Cause:  ExitCause("Crossed position"),
 					}
 
@@ -103,7 +102,7 @@ func (pt *PaperTrader) EntryWatcher() {
 
 		base := "USDT"
 		symbol := strings.ReplaceAll(enterSignal.Symbol, base, "")
-		trade := pt.Open("", symbol, base, position, enterSignal.Quote, enterSignal.Candle.Close, enterSignal.Stoploss, enterSignal.TakeProfit, enterSignal.Candle)
+		trade := pt.Open("", symbol, base, position, enterSignal.Quote, enterSignal.Candle.Close, enterSignal.Stoploss, enterSignal.TakeProfit, &enterSignal.Candle)
 		pt.activeTrade = trade
 		if pt.Debug {
 			log.Printf("💰 Trade started by score %f casued %s\n%s", enterSignal.Candle.Score, enterSignal.Cause, *trade)

@@ -65,11 +65,11 @@ func pivots(inHigh, inLow []float64, deviationThreshold float64, length int) (pi
 		isLow := true
 
 		for o := range hrTargets {
-			if highPivot == 0 && isHigh && (hrTargets[o] > highTarget || hlTargets[o] > highTarget) {
+			if highPivot == 0 && isHigh && (highTarget < inHigh[len(inHigh)-1] || hrTargets[o] > highTarget || hlTargets[o] > highTarget) {
 				isHigh = false
 			}
 
-			if lowPivot == 0 && isLow && (lrTargets[o] < lowTarget || llTargets[o] < lowTarget) {
+			if lowPivot == 0 && isLow && (lowTarget > inLow[len(inLow)-1] || lrTargets[o] < lowTarget || llTargets[o] < lowTarget) {
 				isLow = false
 			}
 		}
@@ -86,7 +86,7 @@ func pivots(inHigh, inLow []float64, deviationThreshold float64, length int) (pi
 			lowFixed = true
 		}
 
-		if len(pivots) == 2 {
+		if highFixed && lowFixed {
 			deviation := calcDev(pivots[0], pivots[1])
 			if math.Abs(deviation) < deviationThreshold {
 				if pivots[0] == highPivot {

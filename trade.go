@@ -58,11 +58,11 @@ func NewTrade(id, driver, symbol, base string, position PositionType, quote, ent
 		id = fmt.Sprint(now.Unix())
 	}
 	if position == PositionBuy {
-		takeProfitPercent = (100 * tp / entry) - 100
-		stopLossPercent = 100 - (100 * sl / entry)
+		takeProfitPercent = (tp - entry) / entry * 100
+		stopLossPercent = (entry - sl) / entry * 100
 	} else {
-		takeProfitPercent = 100 - (100 * tp / entry)
-		stopLossPercent = (100 * sl / entry) - 100
+		takeProfitPercent = (entry - tp) / entry * 100
+		stopLossPercent = (sl - entry) / entry * 100
 	}
 
 	return &Trade{
@@ -106,21 +106,21 @@ func (t *Trade) Close(price float64, candle *Candle) {
 // Stringify the trade.
 func (t Trade) String() string {
 	var text string
-	text = fmt.Sprintf("#%s\t%s\t%f\t%s\n", t.Id, t.Position, t.Amount, t.Symbol)
+	text = fmt.Sprintf("#%s\t%s\t%f %s\n", t.Id, t.Position, t.Amount, t.Symbol)
 	text += fmt.Sprintf("Quote:\t%f %s\n", t.Quote, t.Base)
 	text += fmt.Sprintf("Status:\t%s\n", t.Status)
-	text += fmt.Sprintf("Entry:\t%.2f\t%s\n", t.Entry, t.OpenAt.Local().Format("06/02/01 15:04:05"))
+	text += fmt.Sprintf("Entry:\t%.4f\t%s\n", t.Entry, t.OpenAt.Local().Format("06/02/01 15:04:05"))
 	if t.Status == TradeStatusClose {
-		text += fmt.Sprintf("Exit:\t%.2f\t%s\n", t.Exit, t.CloseAt.Local().Format("06/02/01 15:04:05"))
+		text += fmt.Sprintf("Exit:\t%.4f\t%s\n", t.Exit, t.CloseAt.Local().Format("06/02/01 15:04:05"))
 	}
 	if t.TakeProfitPrice != 0 {
-		text += fmt.Sprintf("TP:\t%.2f\t%%%.2f\n", t.TakeProfitPrice, t.TakeProfitPercent)
+		text += fmt.Sprintf("TP:\t%.4f\t%%%.4f\n", t.TakeProfitPrice, t.TakeProfitPercent)
 	}
 	if t.StopLossPrice != 0 {
-		text += fmt.Sprintf("SL:\t%.2f\t%%%.2f\n", t.StopLossPrice, t.StopLossPercent)
+		text += fmt.Sprintf("SL:\t%.4f\t%%%.4f\n", t.StopLossPrice, t.StopLossPercent)
 	}
 	if t.Status == TradeStatusClose {
-		text += fmt.Sprintf("\tResult:%.2f\t%%%.2f\n", t.ProfitPrice, t.ProfitPercentage)
+		text += fmt.Sprintf("\tResult:%.4f\t%%%.4f\n", t.ProfitPrice, t.ProfitPercentage)
 	}
 
 	return text
