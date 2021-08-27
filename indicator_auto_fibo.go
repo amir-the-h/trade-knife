@@ -30,6 +30,7 @@ func (af *AutoFibo) Add(q *Quote, c *Candle) (ok bool) {
 			candle.AddIndicator(IndicatorTag(fmt.Sprintf("%s:%.2f", af.Tag, ratio)), fibo)
 		}
 		q.Candles[i] = candle
+		ok = true
 
 		return
 	}
@@ -38,6 +39,7 @@ out:
 	for _, candle := range q.Candles {
 		af.Add(q, candle)
 	}
+	ok = true
 
 	return
 }

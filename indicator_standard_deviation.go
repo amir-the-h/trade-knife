@@ -2,21 +2,21 @@ package trade_knife
 
 import "github.com/markcheno/go-talib"
 
-type Ma struct {
+type StandardDeviation struct {
 	Tag          IndicatorTag `mapstructure:"tag"`
 	Source       Source       `mapstructure:"source"`
-	Type         talib.MaType `mapstructure:"type"`
 	InTimePeriod int          `mapstructure:"period"`
+	Deviation    float64      `mapstructure:"deviation"`
 }
 
-func (ma *Ma) Add(q *Quote, c *Candle) (ok bool) {
+func (sd *StandardDeviation) Add(q *Quote, c *Candle) (ok bool) {
 	if c != nil {
 		candle, i := q.Find(c.Opentime.Unix())
 		if candle == nil {
 			goto out
 		}
 
-		startIndex := i - ma.InTimePeriod
+		startIndex := i - sd.InTimePeriod
 		if startIndex < 0 {
 			return
 		}
@@ -28,26 +28,24 @@ func (ma *Ma) Add(q *Quote, c *Candle) (ok bool) {
 			Candles:  q.Candles[startIndex : i+1],
 		}
 
-		values := talib.Ma(quote.Get(ma.Source), ma.InTimePeriod, ma.Type)
-		candle.AddIndicator(ma.Tag, values[len(values)-1])
+		values := talib.StdDev(quote.Get(sd.Source), sd.InTimePeriod, sd.Deviation)
+		candle.AddIndicator(sd.Tag, values[len(values)-1])
 		q.Candles[i] = candle
-		ok = true
 
 		return
 	}
 
 out:
-	if len(q.Candles) < ma.InTimePeriod {
+	if len(q.Candles) < sd.InTimePeriod {
 		return
 	}
 
-	values := talib.Ma(q.Get(ma.Source), ma.InTimePeriod, ma.Type)
-	q.AddIndicator(ma.Tag, values)
-	ok = true
+	values := talib.StdDev(q.Get(sd.Source), sd.InTimePeriod, sd.Deviation)
+	q.AddIndicator(sd.Tag, values)
 
 	return
 }
 
-func (ma *Ma) Is(tag IndicatorTag) bool {
-	return ma.Tag == tag
+func (sd *StandardDeviation) Is(tag IndicatorTag) bool {
+	return sd.Tag == tag
 }

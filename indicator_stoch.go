@@ -31,6 +31,7 @@ func (s *Stoch) Add(q *Quote, c *Candle) (ok bool) {
 		candle.AddIndicator(s.KTag, k[len(k)-1])
 		candle.AddIndicator(s.DTag, d[len(d)-1])
 		q.Candles[i] = candle
+		ok = true
 
 		return
 	}
@@ -39,6 +40,7 @@ out:
 	k, d := talib.Stoch(q.Get(SourceHigh), q.Get(SourceLow), q.Get(SourceClose), s.InFastKPeriod, s.InSlowKPeriod, s.InKMaType, s.InSlowDPeriod, s.InDMaType)
 	q.AddIndicator(s.KTag, k)
 	q.AddIndicator(s.DTag, d)
+	ok = true
 
 	return
 }

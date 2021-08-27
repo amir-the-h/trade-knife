@@ -2,21 +2,20 @@ package trade_knife
 
 import "github.com/markcheno/go-talib"
 
-type Ma struct {
+type LinearRegression struct {
 	Tag          IndicatorTag `mapstructure:"tag"`
 	Source       Source       `mapstructure:"source"`
-	Type         talib.MaType `mapstructure:"type"`
 	InTimePeriod int          `mapstructure:"period"`
 }
 
-func (ma *Ma) Add(q *Quote, c *Candle) (ok bool) {
+func (lr *LinearRegression) Add(q *Quote, c *Candle) (ok bool) {
 	if c != nil {
 		candle, i := q.Find(c.Opentime.Unix())
 		if candle == nil {
 			goto out
 		}
 
-		startIndex := i - ma.InTimePeriod
+		startIndex := i - lr.InTimePeriod
 		if startIndex < 0 {
 			return
 		}
@@ -28,26 +27,24 @@ func (ma *Ma) Add(q *Quote, c *Candle) (ok bool) {
 			Candles:  q.Candles[startIndex : i+1],
 		}
 
-		values := talib.Ma(quote.Get(ma.Source), ma.InTimePeriod, ma.Type)
-		candle.AddIndicator(ma.Tag, values[len(values)-1])
+		values := talib.LinearReg(quote.Get(lr.Source), lr.InTimePeriod)
+		candle.AddIndicator(lr.Tag, values[len(values)-1])
 		q.Candles[i] = candle
-		ok = true
 
 		return
 	}
 
 out:
-	if len(q.Candles) < ma.InTimePeriod {
+	if len(q.Candles) < lr.InTimePeriod {
 		return
 	}
 
-	values := talib.Ma(q.Get(ma.Source), ma.InTimePeriod, ma.Type)
-	q.AddIndicator(ma.Tag, values)
-	ok = true
+	values := talib.LinearReg(q.Get(lr.Source), lr.InTimePeriod)
+	q.AddIndicator(lr.Tag, values)
 
 	return
 }
 
-func (ma *Ma) Is(tag IndicatorTag) bool {
-	return ma.Tag == tag
+func (lr *LinearRegression) Is(tag IndicatorTag) bool {
+	return lr.Tag == tag
 }

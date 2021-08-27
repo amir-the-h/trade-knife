@@ -29,6 +29,7 @@ func (hp *Hp) Add(q *Quote, c *Candle) (ok bool) {
 		values := HPFilter(quote.Get(hp.Source), hp.Lambda)
 		candle.AddIndicator(hp.Tag, values[len(values)-1])
 		q.Candles[i] = candle
+		ok = true
 
 		return
 	}
@@ -41,6 +42,7 @@ out:
 	for _, candle := range q.Candles {
 		hp.Add(q, candle)
 	}
+	ok = true
 
 	return
 }
