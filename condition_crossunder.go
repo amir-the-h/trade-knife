@@ -1,17 +1,19 @@
 package trade_knife
 
-// FastIndicator < SlowIndicator
-// PrevFastIndicator >= PrevSlowIndicator
-func (c *Candle) IndicatorsCrossedUnder(fastTag, slowTag IndicatorTag) bool {
+// Check if fast source crossed under the slow source.
+//
+// fastSource < slowSource
+// prevFastSource >= prevSlowSource
+func (c *Candle) CrossedUnder(fastSource, slowSource Source) bool {
 	previousCandle := c.Previous
 	if previousCandle == nil {
 		return false
 	}
 
-	fastIndicator := c.Get(Source(fastTag))
-	slowIndicator := c.Get(Source(slowTag))
-	previousFastIndicator := previousCandle.Get(Source(fastTag))
-	previousSlowIndicator := previousCandle.Get(Source(slowTag))
+	fastValue := c.Get(Source(fastSource))
+	slowValue := c.Get(Source(slowSource))
+	previousFastValue := previousCandle.Get(Source(fastSource))
+	previousSlowValue := previousCandle.Get(Source(slowSource))
 
-	return fastIndicator < slowIndicator && previousFastIndicator >= previousSlowIndicator
+	return fastValue < slowValue && previousFastValue >= previousSlowValue
 }

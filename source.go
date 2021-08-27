@@ -1,5 +1,7 @@
 package trade_knife
 
+import "strconv"
+
 // Source is a target field on candle.
 type Source string
 
@@ -48,6 +50,10 @@ func (c *Candle) Get(source Source) float64 {
 	}
 
 	if value, ok := c.Indicators[IndicatorTag(source)]; ok {
+		return value
+	}
+
+	if value, err := strconv.ParseFloat(string(source), 64); err == nil {
 		return value
 	}
 

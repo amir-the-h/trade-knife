@@ -1,10 +1,10 @@
 package trade_knife
 
-// Check if candle is above of the indicator
+// Check if candle is above of the source
 //
-// O,H,L,C > Indicator
-func (c *Candle) IsAboveIndicator(source Source) bool {
-	indicator := c.Get(source)
+// O,H,L,C > source
+func (c *Candle) IsAbove(source Source) bool {
+	value := c.Get(source)
 
-	return c.Open > indicator && c.High > indicator && c.Low > indicator && c.Close > indicator
+	return c.Open > value && c.High > value && c.Low > value && c.Close > value
 }

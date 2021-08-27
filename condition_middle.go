@@ -1,13 +1,13 @@
 package trade_knife
 
-// Check if indicator is passed through middle of the candle
+// Check if source is passed through middle of the candle
 //
-// O >= Indicator,
-// H > Indicator,
-// L < Indicator,
-// C <= Indicator,
-func (c *Candle) IsIndicatorMiddle(source Source) bool {
-	indicator := c.Get(source)
+// O >= source,
+// H > source,
+// L < source,
+// C <= source,
+func (c *Candle) IsMiddle(source Source) bool {
+	value := c.Get(source)
 
-	return c.Open >= indicator && c.High > indicator && c.Low < indicator && c.Close <= indicator
+	return c.Open >= value && c.High > value && c.Low < value && c.Close <= value
 }
