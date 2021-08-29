@@ -5,13 +5,13 @@ package trade_knife
 import "errors"
 
 type EnterSignal struct {
-	Score      float64
-	Cause      EnterCause
 	Symbol     string
-	Candle     Candle
+	Score      float64
 	Quote      float64
 	TakeProfit float64
 	Stoploss   float64
+	Cause      string
+	Candle     Candle
 }
 type ExitSignal struct {
 	Trade  *Trade
@@ -22,7 +22,6 @@ type ExitSignal struct {
 type PositionType string
 type MarketType string
 type TradeStatus string
-type EnterCause string
 type ExitCause string
 
 type TradesChannel chan *Trade

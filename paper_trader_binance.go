@@ -1,7 +1,6 @@
 package trade_knife
 
 import (
-	"log"
 	"strings"
 )
 
@@ -9,34 +8,38 @@ import (
 type PaperTrader struct {
 	Trades           Trades
 	candleChannel    CandleChannel
-	enteryChannel    EnterChannel
+	entryChannel     EnterChannel
 	exitChannel      ExitChannel
+	tradeChannel     TradesChannel
 	BuyScoreTrigger  float64
 	SellScoreTrigger float64
 	CloseOnOpposite  bool
 	Cross            bool
 	Debug            bool
 	activeTrade      *Trade
+	logger           Logger
 }
 
 // Returns a pointer to fresh binance papertrade driver.
-func NewPaperTrader(candleChannel CandleChannel, entryChannel EnterChannel, buyscoreTrigger, sellscoreTrigger float64, closeOnOpposite, cross bool) *PaperTrader {
-	exitChannel := make(ExitChannel)
+func NewPaperTrader(candleChannel CandleChannel, entryChannel EnterChannel, exitChannel ExitChannel, tradeChannel TradesChannel, buyscoreTrigger, sellscoreTrigger float64, closeOnOpposite, cross, debug bool, logger Logger) *PaperTrader {
 	return &PaperTrader{
 		candleChannel:    candleChannel,
-		enteryChannel:    entryChannel,
+		entryChannel:     entryChannel,
 		exitChannel:      exitChannel,
+		tradeChannel:     tradeChannel,
 		BuyScoreTrigger:  buyscoreTrigger,
 		SellScoreTrigger: sellscoreTrigger,
 		CloseOnOpposite:  closeOnOpposite,
 		Cross:            cross,
+		Debug:            debug,
+		logger:           logger,
 	}
 }
 
 // Launch all watchers of the driver.
 func (pt *PaperTrader) Start() TradeError {
 	if pt.Debug {
-		log.Println("⏳", "Starting paper trade")
+		pt.logger.Info.Println("Starting paper trade")
 	}
 	// setup watchers threads
 	go pt.EntryWatcher()
@@ -44,7 +47,7 @@ func (pt *PaperTrader) Start() TradeError {
 	go pt.CloseWatcher()
 
 	if pt.Debug {
-		log.Println("✅", "Paper trade started")
+		pt.logger.Success.Println("Paper trade started")
 	}
 	return nil
 }
@@ -67,9 +70,9 @@ func (pt *PaperTrader) Close(id string, exit float64, closeCandle *Candle) {
 // Watch for entry signals and open proper positions.
 func (pt *PaperTrader) EntryWatcher() {
 	if pt.Debug {
-		log.Println("✅", "Entry watcher started")
+		pt.logger.Success.Println("Entry watcher started")
 	}
-	for enterSignal := range pt.enteryChannel {
+	for enterSignal := range pt.entryChannel {
 		var position PositionType
 		if enterSignal.Candle.Score >= pt.BuyScoreTrigger {
 			position = PositionBuy
@@ -105,53 +108,56 @@ func (pt *PaperTrader) EntryWatcher() {
 		trade := pt.Open("", symbol, base, position, enterSignal.Quote, enterSignal.Candle.Close, enterSignal.Stoploss, enterSignal.TakeProfit, &enterSignal.Candle)
 		pt.activeTrade = trade
 		if pt.Debug {
-			log.Printf("💰 Trade started by score %f casued %s\n%s", enterSignal.Candle.Score, enterSignal.Cause, *trade)
+			pt.logger.Info.Printf("Trade started by score %f casued %s\n%s", enterSignal.Candle.Score, enterSignal.Cause, *trade)
 		}
+		pt.tradeChannel <- trade
 	}
 }
 
 // Watch for exit signals and and fire proper close signals.
 func (pt *PaperTrader) ExitWatcher() {
 	if pt.Debug {
-		log.Println("✅", "Exit watcher started")
+		pt.logger.Success.Println("Exit watcher started")
 	}
 	for candle := range pt.candleChannel {
-		if pt.activeTrade != nil && pt.activeTrade.Position == PositionBuy {
-			// check for stop loss first
-			if candle.Close <= pt.activeTrade.StopLossPercent {
-				pt.exitChannel <- ExitSignal{
-					Trade:  pt.activeTrade,
-					Candle: candle,
-					Cause:  ExitCauseStopLossTriggered,
+		if pt.activeTrade != nil && (pt.activeTrade.StopLossPercent != 0 || pt.activeTrade.TakeProfitPercent != 0) {
+			if pt.activeTrade.Position == PositionBuy {
+				// check for stop loss first
+				if pt.activeTrade.StopLossPercent != 0 && candle.Close <= pt.activeTrade.StopLossPercent {
+					pt.exitChannel <- ExitSignal{
+						Trade:  pt.activeTrade,
+						Candle: candle,
+						Cause:  ExitCauseStopLossTriggered,
+					}
+					continue
 				}
-				continue
-			}
-			// and take profit as well
-			if candle.Close >= pt.activeTrade.TakeProfitPrice {
-				pt.exitChannel <- ExitSignal{
-					Trade:  pt.activeTrade,
-					Candle: candle,
-					Cause:  ExitCauseTakeProfitTriggered,
+				// and take profit as well
+				if pt.activeTrade.TakeProfitPercent != 0 && candle.Close >= pt.activeTrade.TakeProfitPrice {
+					pt.exitChannel <- ExitSignal{
+						Trade:  pt.activeTrade,
+						Candle: candle,
+						Cause:  ExitCauseTakeProfitTriggered,
+					}
+					continue
 				}
-				continue
-			}
-		} else if pt.activeTrade != nil && pt.activeTrade.Position == PositionSell {
-			// same rules here
-			if candle.Close >= pt.activeTrade.StopLossPrice {
-				pt.exitChannel <- ExitSignal{
-					Trade:  pt.activeTrade,
-					Candle: candle,
-					Cause:  ExitCauseStopLossTriggered,
+			} else {
+				// same rules here
+				if pt.activeTrade.StopLossPercent != 0 && candle.Close >= pt.activeTrade.StopLossPrice {
+					pt.exitChannel <- ExitSignal{
+						Trade:  pt.activeTrade,
+						Candle: candle,
+						Cause:  ExitCauseStopLossTriggered,
+					}
+					continue
 				}
-				continue
-			}
-			if candle.Close <= pt.activeTrade.TakeProfitPrice {
-				pt.exitChannel <- ExitSignal{
-					Trade:  pt.activeTrade,
-					Candle: candle,
-					Cause:  ExitCauseTakeProfitTriggered,
+				if pt.activeTrade.TakeProfitPercent != 0 && candle.Close <= pt.activeTrade.TakeProfitPrice {
+					pt.exitChannel <- ExitSignal{
+						Trade:  pt.activeTrade,
+						Candle: candle,
+						Cause:  ExitCauseTakeProfitTriggered,
+					}
+					continue
 				}
-				continue
 			}
 		}
 	}
@@ -160,7 +166,7 @@ func (pt *PaperTrader) ExitWatcher() {
 // Watch for close signals and close the trade immediately.
 func (pt *PaperTrader) CloseWatcher() {
 	if pt.Debug {
-		log.Println("✅", "Close watcher started")
+		pt.logger.Success.Println("Close watcher started")
 	}
 	for exitSignal := range pt.exitChannel {
 		// close the trade
@@ -171,7 +177,7 @@ func (pt *PaperTrader) CloseWatcher() {
 			if exitSignal.Trade.ProfitPrice < 0 {
 				icon = "📉"
 			}
-			log.Printf("%s Trade finished by %s\n%s", icon, exitSignal.Cause, *exitSignal.Trade)
+			pt.logger.Info.Printf("%s Trade finished by %s\n%s", icon, exitSignal.Cause, *exitSignal.Trade)
 		}
 		if pt.activeTrade != nil && pt.activeTrade.Id == exitSignal.Trade.Id {
 			pt.activeTrade = nil

@@ -57,12 +57,22 @@ func NewTrade(id, driver, symbol, base string, position PositionType, quote, ent
 	if id == "" {
 		id = fmt.Sprint(now.Unix())
 	}
-	if position == PositionBuy {
-		takeProfitPercent = (tp - entry) / entry * 100
-		stopLossPercent = (entry - sl) / entry * 100
-	} else {
-		takeProfitPercent = (entry - tp) / entry * 100
-		stopLossPercent = (sl - entry) / entry * 100
+	if tp != 0 || sl != 0 {
+		if position == PositionBuy {
+			if tp != 0 {
+				takeProfitPercent = (tp - entry) / entry * 100
+			}
+			if sl != 0 {
+				stopLossPercent = (entry - sl) / entry * 100
+			}
+		} else {
+			if tp != 0 {
+				takeProfitPercent = (entry - tp) / entry * 100
+			}
+			if sl != 0 {
+				stopLossPercent = (sl - entry) / entry * 100
+			}
+		}
 	}
 
 	return &Trade{
