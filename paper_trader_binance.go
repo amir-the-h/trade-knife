@@ -45,6 +45,7 @@ func (pt *PaperTrader) Start() TradeError {
 	go pt.EntryWatcher()
 	go pt.ExitWatcher()
 	go pt.CloseWatcher()
+	go pt.ActiveTradeWatcher()
 
 	if pt.Debug {
 		pt.logger.Success.Println("Paper trade started")
@@ -182,5 +183,17 @@ func (pt *PaperTrader) CloseWatcher() {
 		if pt.activeTrade != nil && pt.activeTrade.Id == exitSignal.Trade.Id {
 			pt.activeTrade = nil
 		}
+	}
+}
+
+// Watch for active trade updates.
+//
+// It may contain change of stop loss or take profit.
+func (pt *PaperTrader) ActiveTradeWatcher() {
+	if pt.Debug {
+		pt.logger.Success.Println("Active trade watcher started")
+	}
+	for trade := range pt.tradeChannel {
+		pt.activeTrade = trade
 	}
 }

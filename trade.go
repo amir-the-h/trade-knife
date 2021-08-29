@@ -47,6 +47,7 @@ type Trader interface {
 	EntryWatcher()
 	ExitWatcher()
 	CloseWatcher()
+	ActiveTradeWatcher()
 }
 
 // returns a pointer to a fresh trade.
