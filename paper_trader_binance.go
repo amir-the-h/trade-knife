@@ -77,9 +77,9 @@ func (pt *PaperTrader) EntryWatcher() {
 	}
 	for enterSignal := range pt.entryChannel {
 		var position PositionType
-		if enterSignal.Candle.Score >= pt.BuyScoreTrigger {
+		if enterSignal.Score >= pt.BuyScoreTrigger {
 			position = PositionBuy
-		} else if enterSignal.Candle.Score <= pt.SellScoreTrigger {
+		} else if enterSignal.Score <= pt.SellScoreTrigger {
 			position = PositionSell
 		} else {
 			continue
