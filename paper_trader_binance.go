@@ -10,7 +10,6 @@ type PaperTrader struct {
 	candleChannel    CandleChannel
 	entryChannel     EnterChannel
 	exitChannel      ExitChannel
-	tradeChannel     TradesChannel
 	Wallet           float64
 	BuyScoreTrigger  float64
 	SellScoreTrigger float64
@@ -22,12 +21,11 @@ type PaperTrader struct {
 }
 
 // Returns a pointer to fresh binance papertrade driver.
-func NewPaperTrader(candleChannel CandleChannel, entryChannel EnterChannel, exitChannel ExitChannel, tradeChannel TradesChannel, wallet, buyscoreTrigger, sellscoreTrigger float64, closeOnOpposite, cross, debug bool, logger Logger) *PaperTrader {
+func NewPaperTrader(candleChannel CandleChannel, entryChannel EnterChannel, exitChannel ExitChannel, wallet, buyscoreTrigger, sellscoreTrigger float64, closeOnOpposite, cross, debug bool, logger Logger) *PaperTrader {
 	return &PaperTrader{
 		candleChannel:    candleChannel,
 		entryChannel:     entryChannel,
 		exitChannel:      exitChannel,
-		tradeChannel:     tradeChannel,
 		Wallet:           wallet,
 		BuyScoreTrigger:  buyscoreTrigger,
 		SellScoreTrigger: sellscoreTrigger,
@@ -113,7 +111,6 @@ func (pt *PaperTrader) EntryWatcher() {
 		if pt.Debug {
 			pt.logger.Info.Printf("Trade started by score %f casued %s\n%s", enterSignal.Candle.Score, enterSignal.Cause, *trade)
 		}
-		pt.tradeChannel <- trade
 	}
 }
 
