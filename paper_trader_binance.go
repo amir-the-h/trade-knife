@@ -28,7 +28,7 @@ func NewPaperTrader(candleChannel CandleChannel, entryChannel EnterChannel, exit
 		candleChannel:    candleChannel,
 		entryChannel:     entryChannel,
 		exitChannel:      exitChannel,
-		openTrades:       doneTrades,
+		openTrades:       openTrades,
 		doneTrades:       doneTrades,
 		Wallet:           wallet,
 		BuyScoreTrigger:  buyscoreTrigger,
