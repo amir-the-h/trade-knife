@@ -10,6 +10,7 @@ type PaperTrader struct {
 	candleChannel    CandleChannel
 	entryChannel     EnterChannel
 	exitChannel      ExitChannel
+	openTrades       TradesChannel
 	doneTrades       TradesChannel
 	Wallet           float64
 	BuyScoreTrigger  float64
@@ -22,11 +23,12 @@ type PaperTrader struct {
 }
 
 // Returns a pointer to fresh binance papertrade driver.
-func NewPaperTrader(candleChannel CandleChannel, entryChannel EnterChannel, exitChannel ExitChannel, doneTrades TradesChannel, wallet, buyscoreTrigger, sellscoreTrigger float64, closeOnOpposite, cross, debug bool, logger Logger) *PaperTrader {
+func NewPaperTrader(candleChannel CandleChannel, entryChannel EnterChannel, exitChannel ExitChannel, openTrades TradesChannel, doneTrades TradesChannel, wallet, buyscoreTrigger, sellscoreTrigger float64, closeOnOpposite, cross, debug bool, logger Logger) *PaperTrader {
 	return &PaperTrader{
 		candleChannel:    candleChannel,
 		entryChannel:     entryChannel,
 		exitChannel:      exitChannel,
+		openTrades:       doneTrades,
 		doneTrades:       doneTrades,
 		Wallet:           wallet,
 		BuyScoreTrigger:  buyscoreTrigger,
@@ -57,6 +59,7 @@ func (pt *PaperTrader) Start() TradeError {
 // Create a new trade immediately.
 func (pt *PaperTrader) Open(id, symbol, base string, position PositionType, quote, entry, sl, tp float64, openCandle *Candle) *Trade {
 	trade := NewTrade(id, "PaperTrader Papertrade", symbol, base, position, quote, entry, sl, tp, openCandle)
+	pt.openTrades <- trade
 	pt.Trades = append(pt.Trades, trade)
 	return trade
 }
