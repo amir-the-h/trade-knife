@@ -4,7 +4,7 @@ package trade_knife
 //
 // O,H,L,C > source
 func (c *Candle) IsAbove(source Source) bool {
-	value := c.Get(source)
+	value, _ := c.Get(source)
 
 	return c.Open > value && c.High > value && c.Low > value && c.Close > value
 }

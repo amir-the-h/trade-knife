@@ -6,7 +6,7 @@ package trade_knife
 // O,H,C > source
 // L <= source
 func (c *Candle) TouchedDown(source Source) bool {
-	value := c.Get(source)
+	value, _ := c.Get(source)
 
 	return c.Open > value && c.High > value && c.Low <= value && c.Close > value
 }

@@ -10,10 +10,22 @@ func (c *Candle) CrossedUnder(fastSource, slowSource Source) bool {
 		return false
 	}
 
-	fastValue := c.Get(Source(fastSource))
-	slowValue := c.Get(Source(slowSource))
-	previousFastValue := previousCandle.Get(Source(fastSource))
-	previousSlowValue := previousCandle.Get(Source(slowSource))
+	fastValue, ok := c.Get(Source(fastSource))
+	if !ok {
+		return false
+	}
+	slowValue, ok := c.Get(Source(slowSource))
+	if !ok {
+		return false
+	}
+	previousFastValue, ok := previousCandle.Get(Source(fastSource))
+	if !ok {
+		return false
+	}
+	previousSlowValue, ok := previousCandle.Get(Source(slowSource))
+	if !ok {
+		return false
+	}
 
 	return fastValue < slowValue && previousFastValue >= previousSlowValue
 }

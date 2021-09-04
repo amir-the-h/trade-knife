@@ -30,13 +30,20 @@ func (bbb *BollingerBandsB) Add(q *Quote, c *Candle) (ok bool) {
 			Candles:  q.Candles[startIndex : i+1],
 		}
 
-		deviation := c.Get(Source(bbb.Std.Tag))
+		deviation, dok := c.Get(Source(bbb.Std.Tag))
+		if !dok {
+			return
+		}
 
 		if deviation == 0 {
 			if !bbb.Std.Add(&quote, c) {
 				return
 			}
-			deviation = c.Get(Source(bbb.Std.Tag))
+
+			deviation, dok = c.Get(Source(bbb.Std.Tag))
+			if !dok {
+				return
+			}
 		}
 
 		sma := &Ma{
@@ -45,22 +52,31 @@ func (bbb *BollingerBandsB) Add(q *Quote, c *Candle) (ok bool) {
 			Type:         talib.SMA,
 			InTimePeriod: bbb.Std.InTimePeriod,
 		}
-		basis := c.Get(Source(sma.Tag))
+		basis, dok := c.Get(Source(sma.Tag))
+		if !dok {
+			return
+		}
 		if basis == 0 {
 			if !sma.Add(&quote, c) {
 				return
 			}
-			basis = c.Get(Source(sma.Tag))
+			basis, dok = c.Get(Source(sma.Tag))
+			if !dok {
+				return
+			}
 		}
 
 		upper := basis + deviation
 		lower := basis - deviation
-		bbr := (c.Get(bbb.Std.Source) - lower) / (upper - lower)
+		bbr, dok := c.Get(bbb.Std.Source)
+		if !dok {
+			return
+		}
+		bbr = (bbr - lower) / (upper - lower)
 		candle.AddIndicator(bbb.Tag, bbr)
 		q.Candles[i] = candle
-		ok = true
 
-		return
+		return true
 	}
 
 out:

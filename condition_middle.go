@@ -7,7 +7,7 @@ package trade_knife
 // L < source,
 // C <= source,
 func (c *Candle) IsMiddle(source Source) bool {
-	value := c.Get(source)
+	value, _ := c.Get(source)
 
 	return c.Open >= value && c.High > value && c.Low < value && c.Close <= value
 }
