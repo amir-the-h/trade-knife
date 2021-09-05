@@ -46,7 +46,7 @@ func (c *Candle) Get(source Source) (float64, bool) {
 
 		// all together
 	case SourceOpenHighLowClose:
-		return (c.High + c.Low + c.Close) / 3, true
+		return (c.Open + c.High + c.Low + c.Close) / 4, true
 	}
 
 	if value, ok := c.Indicators[IndicatorTag(source)]; ok {
