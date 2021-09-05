@@ -9,7 +9,7 @@ type Ma struct {
 	InTimePeriod int          `mapstructure:"period"`
 }
 
-func (ma *Ma) Add(q *Quote, c *Candle) (ok bool) {
+func (ma *Ma) Add(q *Quote, c *Candle) bool {
 	if c != nil {
 		candle, i := q.Find(c.Opentime.Unix())
 		if candle == nil {
@@ -18,7 +18,7 @@ func (ma *Ma) Add(q *Quote, c *Candle) (ok bool) {
 
 		startIndex := i - ma.InTimePeriod
 		if startIndex < 0 {
-			return
+			return false
 		}
 
 		quote := Quote{
@@ -29,23 +29,21 @@ func (ma *Ma) Add(q *Quote, c *Candle) (ok bool) {
 		}
 
 		values := talib.Ma(quote.Get(ma.Source), ma.InTimePeriod, ma.Type)
-		candle.AddIndicator(ma.Tag, values[len(values)-1])
-		q.Candles[i] = candle
-		ok = true
+		c.AddIndicator(ma.Tag, values[len(values)-1])
+		q.Candles[i] = c
 
-		return
+		return true
 	}
 
 out:
 	if len(q.Candles) < ma.InTimePeriod {
-		return
+		return false
 	}
 
 	values := talib.Ma(q.Get(ma.Source), ma.InTimePeriod, ma.Type)
 	q.AddIndicator(ma.Tag, values)
-	ok = true
 
-	return
+	return true
 }
 
 func (ma *Ma) Is(tag IndicatorTag) bool {

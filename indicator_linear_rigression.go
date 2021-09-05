@@ -8,16 +8,16 @@ type LinearRegression struct {
 	InTimePeriod int          `mapstructure:"period"`
 }
 
-func (lr *LinearRegression) Add(q *Quote, c *Candle) (ok bool) {
+func (lr *LinearRegression) Add(q *Quote, c *Candle) bool {
 	if c != nil {
 		candle, i := q.Find(c.Opentime.Unix())
 		if candle == nil {
-			goto out
+			return false
 		}
 
 		startIndex := i - lr.InTimePeriod
 		if startIndex < 0 {
-			return
+			return false
 		}
 
 		quote := Quote{
@@ -28,21 +28,20 @@ func (lr *LinearRegression) Add(q *Quote, c *Candle) (ok bool) {
 		}
 
 		values := talib.LinearReg(quote.Get(lr.Source), lr.InTimePeriod)
-		candle.AddIndicator(lr.Tag, values[len(values)-1])
-		q.Candles[i] = candle
+		c.AddIndicator(lr.Tag, values[len(values)-1])
+		q.Candles[i] = c
 
-		return
+		return true
 	}
 
-out:
 	if len(q.Candles) < lr.InTimePeriod {
-		return
+		return false
 	}
 
 	values := talib.LinearReg(q.Get(lr.Source), lr.InTimePeriod)
 	q.AddIndicator(lr.Tag, values)
 
-	return
+	return true
 }
 
 func (lr *LinearRegression) Is(tag IndicatorTag) bool {

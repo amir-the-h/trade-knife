@@ -13,11 +13,11 @@ type Stoch struct {
 	InDMaType     talib.MaType `mapstructure:"dMaType"`
 }
 
-func (s *Stoch) Add(q *Quote, c *Candle) (ok bool) {
+func (s *Stoch) Add(q *Quote, c *Candle) bool {
 	if c != nil {
 		candle, i := q.Find(c.Opentime.Unix())
 		if candle == nil {
-			goto out
+			return false
 		}
 
 		quote := Quote{
@@ -28,21 +28,18 @@ func (s *Stoch) Add(q *Quote, c *Candle) (ok bool) {
 		}
 
 		k, d := talib.Stoch(quote.Get(SourceHigh), quote.Get(SourceLow), quote.Get(SourceClose), s.InFastKPeriod, s.InSlowKPeriod, s.InKMaType, s.InSlowDPeriod, s.InDMaType)
-		candle.AddIndicator(s.KTag, k[len(k)-1])
-		candle.AddIndicator(s.DTag, d[len(d)-1])
-		q.Candles[i] = candle
-		ok = true
+		c.AddIndicator(s.KTag, k[len(k)-1])
+		c.AddIndicator(s.DTag, d[len(d)-1])
+		q.Candles[i] = c
 
-		return
+		return true
 	}
 
-out:
 	k, d := talib.Stoch(q.Get(SourceHigh), q.Get(SourceLow), q.Get(SourceClose), s.InFastKPeriod, s.InSlowKPeriod, s.InKMaType, s.InSlowDPeriod, s.InDMaType)
 	q.AddIndicator(s.KTag, k)
 	q.AddIndicator(s.DTag, d)
-	ok = true
 
-	return
+	return true
 }
 
 func (s *Stoch) Is(tag IndicatorTag) bool {

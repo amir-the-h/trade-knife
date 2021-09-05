@@ -7,16 +7,16 @@ type Hp struct {
 	Length int          `mapstructure:"length"`
 }
 
-func (hp *Hp) Add(q *Quote, c *Candle) (ok bool) {
+func (hp *Hp) Add(q *Quote, c *Candle) bool {
 	if c != nil {
 		candle, i := q.Find(c.Opentime.Unix())
 		if candle == nil {
-			goto out
+			return false
 		}
 
 		startIndex := i - hp.Length
 		if startIndex < 0 {
-			return
+			return false
 		}
 
 		quote := Quote{
@@ -27,24 +27,21 @@ func (hp *Hp) Add(q *Quote, c *Candle) (ok bool) {
 		}
 
 		values := HPFilter(quote.Get(hp.Source), hp.Lambda)
-		candle.AddIndicator(hp.Tag, values[len(values)-1])
-		q.Candles[i] = candle
-		ok = true
+		c.AddIndicator(hp.Tag, values[len(values)-1])
+		q.Candles[i] = c
 
-		return
+		return true
 	}
 
-out:
 	if len(q.Candles) < hp.Length {
-		return
+		return false
 	}
 
 	for _, candle := range q.Candles {
 		hp.Add(q, candle)
 	}
-	ok = true
 
-	return
+	return true
 }
 
 func (hp *Hp) Is(tag IndicatorTag) bool {

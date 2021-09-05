@@ -11,16 +11,16 @@ type BollingerBandsB struct {
 	Std StandardDeviation `mapstructure:"standardDeviation"`
 }
 
-func (bbb *BollingerBandsB) Add(q *Quote, c *Candle) (ok bool) {
+func (bbb *BollingerBandsB) Add(q *Quote, c *Candle) bool {
 	if c != nil {
 		candle, i := q.Find(c.Opentime.Unix())
 		if candle == nil {
-			goto out
+			return false
 		}
 
 		startIndex := i - bbb.Std.InTimePeriod
 		if startIndex < 0 {
-			return
+			return false
 		}
 
 		quote := Quote{
@@ -30,19 +30,15 @@ func (bbb *BollingerBandsB) Add(q *Quote, c *Candle) (ok bool) {
 			Candles:  q.Candles[startIndex : i+1],
 		}
 
-		deviation, dok := c.Get(Source(bbb.Std.Tag))
-		if !dok {
-			return
-		}
-
-		if deviation == 0 {
+		deviation, ok := c.Get(Source(bbb.Std.Tag))
+		if !ok {
 			if !bbb.Std.Add(&quote, c) {
-				return
+				return false
 			}
 
-			deviation, dok = c.Get(Source(bbb.Std.Tag))
-			if !dok {
-				return
+			deviation, ok = c.Get(Source(bbb.Std.Tag))
+			if !ok {
+				return false
 			}
 		}
 
@@ -52,25 +48,22 @@ func (bbb *BollingerBandsB) Add(q *Quote, c *Candle) (ok bool) {
 			Type:         talib.SMA,
 			InTimePeriod: bbb.Std.InTimePeriod,
 		}
-		basis, dok := c.Get(Source(sma.Tag))
-		if !dok {
-			return
-		}
-		if basis == 0 {
+		basis, ok := c.Get(Source(sma.Tag))
+		if !ok {
 			if !sma.Add(&quote, c) {
-				return
+				return false
 			}
-			basis, dok = c.Get(Source(sma.Tag))
-			if !dok {
-				return
+			basis, ok = c.Get(Source(sma.Tag))
+			if !ok {
+				return false
 			}
 		}
 
 		upper := basis + deviation
 		lower := basis - deviation
-		bbr, dok := c.Get(bbb.Std.Source)
-		if !dok {
-			return
+		bbr, ok := c.Get(bbb.Std.Source)
+		if !ok {
+			return false
 		}
 		bbr = (bbr - lower) / (upper - lower)
 		candle.AddIndicator(bbb.Tag, bbr)
@@ -79,19 +72,17 @@ func (bbb *BollingerBandsB) Add(q *Quote, c *Candle) (ok bool) {
 		return true
 	}
 
-out:
 	if len(q.Candles) < bbb.Std.InTimePeriod {
-		return
+		return false
 	}
 
 	for _, candle := range q.Candles {
 		if !bbb.Add(q, candle) {
-			return
+			return false
 		}
 	}
-	ok = true
 
-	return
+	return true
 }
 
 func (bbb *BollingerBandsB) Is(tag IndicatorTag) bool {

@@ -11,11 +11,11 @@ type AutoFibo struct {
 	Depth     int          `mapstructure:"depth"`
 }
 
-func (af *AutoFibo) Add(q *Quote, c *Candle) (ok bool) {
+func (af *AutoFibo) Add(q *Quote, c *Candle) bool {
 	if c != nil {
 		candle, i := q.Find(c.Opentime.Unix())
 		if candle == nil {
-			goto out
+			return false
 		}
 
 		quote := Quote{
@@ -27,21 +27,20 @@ func (af *AutoFibo) Add(q *Quote, c *Candle) (ok bool) {
 
 		fibos := AutoFiboRectracement(quote.Get(SourceHigh), quote.Get(SourceLow), quote.Get(SourceClose), af.Ratios, af.Depth, af.Deviation)
 		for ratio, fibo := range fibos[len(fibos)-1] {
-			candle.AddIndicator(IndicatorTag(fmt.Sprintf("%s:%.2f", af.Tag, ratio)), fibo)
+			c.AddIndicator(IndicatorTag(fmt.Sprintf("%s:%.2f", af.Tag, ratio)), fibo)
 		}
-		q.Candles[i] = candle
-		ok = true
+		q.Candles[i] = c
 
-		return
+		return true
 	}
 
-out:
 	for _, candle := range q.Candles {
-		af.Add(q, candle)
+		if !af.Add(q, candle) {
+			return false
+		}
 	}
-	ok = true
 
-	return
+	return true
 }
 
 func (af *AutoFibo) Is(tag IndicatorTag) bool {
