@@ -1,6 +1,6 @@
 package trade_knife
 
-// Score candles by checking support/resistance line reaction.
+// ScoreBySupportResistance scores candles by checking support/resistance line reaction.
 func (q *Quote) ScoreBySupportResistance(score float64, source Source) {
 	quote := *q
 	// loop through quote

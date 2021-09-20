@@ -1,6 +1,6 @@
 package trade_knife
 
-// Check if candle is below of the source.
+// IsBelow checks if candle is below of the source.
 //
 // O,H,L,C < source
 func (c *Candle) IsBelow(source Source) bool {

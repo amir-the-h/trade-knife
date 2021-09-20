@@ -1,6 +1,6 @@
 package trade_knife
 
-// Score candles by checking touching and turning back into the band.
+// ScoreByBands scores candles by checking touching and turning back into the band.
 func (q *Quote) ScoreByBands(score float64, source Source) {
 	quote := *q
 	// loop through quote

@@ -1,6 +1,6 @@
 package trade_knife
 
-// Score candles by checking sources cross over/under condition on each of them.
+// ScoreByCross scores candles by checking sources cross over/under condition on each of them.
 func (q *Quote) ScoreByCross(score float64, fastSource, slowSource Source) {
 	quote := *q
 	// loop through quote

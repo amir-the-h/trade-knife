@@ -1,13 +1,14 @@
 package trade_knife
 
 import (
+	"github.com/amir-the-h/goex"
 	"time"
 )
 
 // Interval is the timeframe concept and determines duration of each candle.
 type Interval string
 
-// Returns actual duration of the interval.
+// Duration Returns actual duration of the interval.
 func (i Interval) Duration() time.Duration {
 	switch i {
 	case Interval1m:
@@ -45,7 +46,43 @@ func (i Interval) Duration() time.Duration {
 	return time.Duration(0)
 }
 
-// Returns the open and close time which the interval can fit in.
+// KlinePeriod Returns goex.KlinePeriod associated type
+func (i Interval) KlinePeriod() goex.KlinePeriod {
+	switch i {
+	case Interval3m:
+		return goex.KLINE_PERIOD_3MIN
+	case Interval5m:
+		return goex.KLINE_PERIOD_5MIN
+	case Interval15m:
+		return goex.KLINE_PERIOD_15MIN
+	case Interval30m:
+		return goex.KLINE_PERIOD_30MIN
+	case Interval1h:
+		return goex.KLINE_PERIOD_1H
+	case Interval2h:
+		return goex.KLINE_PERIOD_2H
+	case Interval4h:
+		return goex.KLINE_PERIOD_4H
+	case Interval6h:
+		return goex.KLINE_PERIOD_6H
+	case Interval8h:
+		return goex.KLINE_PERIOD_8H
+	case Interval12h:
+		return goex.KLINE_PERIOD_12H
+	case Interval1d:
+		return goex.KLINE_PERIOD_1DAY
+	case Interval3d:
+		return goex.KLINE_PERIOD_3DAY
+	case Interval1w:
+		return goex.KLINE_PERIOD_1WEEK
+	case Interval1M:
+		return goex.KLINE_PERIOD_1MONTH
+	}
+
+	return goex.KLINE_PERIOD_1MIN
+}
+
+// GetPeriod Returns the open and close time which the interval can fit in.
 func (i Interval) GetPeriod(ts int64) (ot *time.Time, ct *time.Time, err error) {
 	t := time.Unix(int64(ts/1000), 0)
 	switch i {

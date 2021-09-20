@@ -1,6 +1,6 @@
 package trade_knife
 
-// Check if candle closed above the source but the Low shadow
+// TouchedDown checks if candle closed above the source but the Low shadow
 // touched the source.
 //
 // O,H,C > source

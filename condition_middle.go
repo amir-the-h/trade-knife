@@ -1,6 +1,6 @@
 package trade_knife
 
-// Check if source is passed through middle of the candle
+// IsMiddle checks if source is passed through middle of the candle
 //
 // O >= source,
 // H > source,

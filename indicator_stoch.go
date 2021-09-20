@@ -22,7 +22,7 @@ func (s *Stoch) Add(q *Quote, c *Candle) bool {
 
 		quote := Quote{
 			Market:   q.Market,
-			Symbol:   q.Symbol,
+			Currency:   q.Currency,
 			Interval: q.Interval,
 			Candles:  q.Candles[:i+1],
 		}

@@ -4,7 +4,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// Filter the given values by Hodrick-Prescott filter.
+// HPFilter filters the given values by Hodrick-Prescott filter.
 //
 // https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwjorp3ls6byAhUHDOwKHX27DwgQFnoECAcQAQ&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FHodrick%25E2%2580%2593Prescott_filter&usg=AOvVaw24zh7DousHxEoH5CpSHpIJ
 func HPFilter(values []float64, lambda float64) []float64 {

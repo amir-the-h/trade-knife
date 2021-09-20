@@ -1,9 +1,11 @@
-package trade_knife
+package fetchers
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/amir-the-h/goex"
+	"github.com/amir-the-h/trade-knife"
 	"strconv"
 	"time"
 
@@ -12,12 +14,21 @@ import (
 	"github.com/adshao/go-binance/v2/futures"
 )
 
-// Fetches quote from binance market.
-func NewQuoteFromBinance(apiKey, secretKey, symbol string, market MarketType, interval Interval, openTimestamp ...int64) (*Quote, error) {
+// Binance is a Binance-Exchange trade_knife.Fetcher
+type Binance struct {
+}
+
+// NewBinance returns a pointer to a fresh Binance trader.
+func NewBinance() *Binance {
+	return &Binance{}
+}
+
+// NewQuote fetches quote from binance market.
+func (b *Binance) NewQuote(currency goex.CurrencyPair, market trade_knife.MarketType, interval trade_knife.Interval, openTime *time.Time) (*trade_knife.Quote, error) {
 	var (
 		tots, tcts, ots, cts time.Time
-		quote                = Quote{
-			Symbol:   symbol,
+		quote                = trade_knife.Quote{
+			Currency: currency,
 			Market:   market,
 			Interval: interval,
 		}
@@ -25,12 +36,12 @@ func NewQuoteFromBinance(apiKey, secretKey, symbol string, market MarketType, in
 
 	direction := -1
 	switch market {
-	case MarketSpot:
-		client := binance.NewClient(apiKey, secretKey)
-		request := client.NewKlinesService().Symbol(symbol).Interval(string(interval))
-		if len(openTimestamp) > 0 {
+	case trade_knife.MarketSpot:
+		client := binance.NewClient("", "")
+		request := client.NewKlinesService().Symbol(currency.ToSymbol("")).Interval(string(interval))
+		if openTime != nil {
 			direction = 1
-			request.StartTime(openTimestamp[0] * 1000)
+			request.StartTime(openTime.Unix() * 1000)
 		}
 		klines, err := request.Do(context.Background())
 		if err != nil {
@@ -40,14 +51,14 @@ func NewQuoteFromBinance(apiKey, secretKey, symbol string, market MarketType, in
 		for len(klines) > 0 {
 			tots = ots
 			tcts = cts
-			ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * time.Duration(direction) * 24 * 90).UTC()
-			cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(interval.Duration()).UTC()
+			ots = time.Unix(klines[0].OpenTime/1000, 0).Add(time.Hour * time.Duration(direction) * 24 * 90).UTC()
+			cts = time.Unix(klines[0].CloseTime/1000, 0).Add(interval.Duration()).UTC()
 			if tots == ots || tcts == cts {
 				break
 			}
 
 			for _, kline := range klines {
-				candle, err := createCandleFromKline(kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, kline.OpenTime, kline.CloseTime)
+				candle, err := createCandleFromBinanceKline(kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, kline.OpenTime, kline.CloseTime)
 				if err != nil {
 					return &quote, err
 				}
@@ -58,12 +69,12 @@ func NewQuoteFromBinance(apiKey, secretKey, symbol string, market MarketType, in
 				return &quote, err
 			}
 		}
-	case MarketFutures:
-		client := futures.NewClient(apiKey, secretKey)
-		request := client.NewKlinesService().Symbol(symbol).Interval(string(interval))
-		if len(openTimestamp) > 0 {
+	case trade_knife.MarketFutures:
+		client := futures.NewClient("","")
+		request := client.NewKlinesService().Symbol(currency.ToSymbol("")).Interval(string(interval))
+		if openTime != nil {
 			direction = 1
-			request.StartTime(openTimestamp[0] * 1000)
+			request.StartTime(openTime.Unix() * 1000)
 		}
 		klines, err := request.Do(context.Background())
 		if err != nil {
@@ -73,14 +84,14 @@ func NewQuoteFromBinance(apiKey, secretKey, symbol string, market MarketType, in
 		for len(klines) > 0 {
 			tots = ots
 			tcts = cts
-			ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * time.Duration(direction) * 24 * 90).UTC()
-			cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(interval.Duration()).UTC()
+			ots = time.Unix(klines[0].OpenTime/1000, 0).Add(time.Hour * time.Duration(direction) * 24 * 90).UTC()
+			cts = time.Unix(klines[0].CloseTime/1000, 0).Add(interval.Duration()).UTC()
 			if tots == ots || tcts == cts {
 				break
 			}
 
 			for _, kline := range klines {
-				candle, err := createCandleFromKline(kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, kline.OpenTime, kline.CloseTime)
+				candle, err := createCandleFromBinanceKline(kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, kline.OpenTime, kline.CloseTime)
 				if err != nil {
 					return &quote, err
 				}
@@ -91,12 +102,12 @@ func NewQuoteFromBinance(apiKey, secretKey, symbol string, market MarketType, in
 				return &quote, err
 			}
 		}
-	case MarketDelivery:
-		client := delivery.NewClient(apiKey, secretKey)
-		request := client.NewKlinesService().Symbol(symbol).Interval(string(interval))
-		if len(openTimestamp) > 0 {
+	case trade_knife.MarketDelivery:
+		client := delivery.NewClient("","")
+		request := client.NewKlinesService().Symbol(currency.ToSymbol("")).Interval(string(interval))
+		if openTime != nil {
 			direction = 1
-			request.StartTime(openTimestamp[0] * 1000)
+			request.StartTime(openTime.Unix() * 1000)
 		}
 		klines, err := request.Do(context.Background())
 		if err != nil {
@@ -106,14 +117,14 @@ func NewQuoteFromBinance(apiKey, secretKey, symbol string, market MarketType, in
 		for len(klines) > 0 {
 			tots = ots
 			tcts = cts
-			ots = time.Unix(int64(klines[0].OpenTime/1000), 0).Add(time.Hour * time.Duration(direction) * 24 * 90).UTC()
-			cts = time.Unix(int64(klines[0].CloseTime/1000), 0).Add(interval.Duration()).UTC()
+			ots = time.Unix(klines[0].OpenTime/1000, 0).Add(time.Hour * time.Duration(direction) * 24 * 90).UTC()
+			cts = time.Unix(klines[0].CloseTime/1000, 0).Add(interval.Duration()).UTC()
 			if tots == ots || tcts == cts {
 				break
 			}
 
 			for _, kline := range klines {
-				candle, err := createCandleFromKline(kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, kline.OpenTime, kline.CloseTime)
+				candle, err := createCandleFromBinanceKline(kline.Open, kline.High, kline.Low, kline.Close, kline.Volume, kline.OpenTime, kline.CloseTime)
 				if err != nil {
 					return &quote, err
 				}
@@ -131,8 +142,8 @@ func NewQuoteFromBinance(apiKey, secretKey, symbol string, market MarketType, in
 	return q, nil
 }
 
-// Fetch all candles after last candle including itself.
-func (q *Quote) RefreshBinance(apiKey, secretKey string) error {
+// Refresh fetches all candles after last candle including itself.
+func (b *Binance) Refresh(q *trade_knife.Quote) error {
 	quote := *q
 	if len(quote.Candles) == 0 {
 		return errors.New("won't be able to refresh an empty quote")
@@ -140,11 +151,11 @@ func (q *Quote) RefreshBinance(apiKey, secretKey string) error {
 
 	var (
 		lastCandle   = quote.Candles[len(quote.Candles)-1]
-		openTime     = lastCandle.Opentime.Unix()
-		fetchedQuote *Quote
+		openTime     = lastCandle.Opentime
+		fetchedQuote *trade_knife.Quote
 		err          error
 	)
-	fetchedQuote, err = NewQuoteFromBinance(apiKey, secretKey, quote.Symbol, quote.Market, quote.Interval, openTime)
+	fetchedQuote, err = b.NewQuote(quote.Currency, quote.Market, quote.Interval, &openTime)
 	if err != nil {
 		return err
 	}
@@ -154,11 +165,11 @@ func (q *Quote) RefreshBinance(apiKey, secretKey string) error {
 	return nil
 }
 
-// Will sync quote with latest binance kline info.
-func (q *Quote) SyncBinance(update CandleChannel) (doneC chan struct{}, err error) {
+// Sync syncs quote with latest binance kline info.
+func (b *Binance) Sync(q *trade_knife.Quote, update trade_knife.CandleChannel) (err error) {
 	quote := *q
 	if len(quote.Candles) == 0 {
-		return nil, errors.New("won't be able to sync an empty quote")
+		return errors.New("won't be able to sync an empty quote")
 	}
 
 	errHandler := func(err error) {
@@ -166,7 +177,7 @@ func (q *Quote) SyncBinance(update CandleChannel) (doneC chan struct{}, err erro
 	}
 
 	switch quote.Market {
-	case MarketSpot:
+	case trade_knife.MarketSpot:
 		wsKlineHandler := func(event *binance.WsKlineEvent) {
 			kline := event.Kline
 			o, _ := strconv.ParseFloat(kline.Open, 64)
@@ -182,8 +193,8 @@ func (q *Quote) SyncBinance(update CandleChannel) (doneC chan struct{}, err erro
 			}
 			update <- candle
 		}
-		doneC, _, err = binance.WsKlineServe(quote.Symbol, string(quote.Interval), wsKlineHandler, errHandler)
-	case MarketFutures:
+		_, _, err = binance.WsKlineServe(quote.Currency.ToSymbol(""), string(quote.Interval), wsKlineHandler, errHandler)
+	case trade_knife.MarketFutures:
 		wsKlineHandler := func(event *futures.WsKlineEvent) {
 			kline := event.Kline
 			o, _ := strconv.ParseFloat(kline.Open, 64)
@@ -199,8 +210,8 @@ func (q *Quote) SyncBinance(update CandleChannel) (doneC chan struct{}, err erro
 			}
 			update <- candle
 		}
-		doneC, _, err = futures.WsKlineServe(quote.Symbol, string(quote.Interval), wsKlineHandler, errHandler)
-	case MarketDelivery:
+		_, _, err = futures.WsKlineServe(quote.Currency.ToSymbol(""), string(quote.Interval), wsKlineHandler, errHandler)
+	case trade_knife.MarketDelivery:
 		wsKlineHandler := func(event *delivery.WsKlineEvent) {
 			kline := event.Kline
 			o, _ := strconv.ParseFloat(kline.Open, 64)
@@ -216,13 +227,13 @@ func (q *Quote) SyncBinance(update CandleChannel) (doneC chan struct{}, err erro
 			}
 			update <- candle
 		}
-		doneC, _, err = delivery.WsKlineServe(quote.Symbol, string(quote.Interval), wsKlineHandler, errHandler)
+		_, _, err = delivery.WsKlineServe(quote.Currency.ToSymbol(""), string(quote.Interval), wsKlineHandler, errHandler)
 	}
 
 	return
 }
 
-func createCandleFromKline(open, high, low, close, volume string, openTime, closeTime int64) (candle *Candle, err error) {
+func createCandleFromBinanceKline(open, high, low, close, volume string, openTime, closeTime int64) (candle *trade_knife.Candle, err error) {
 	ot := time.Unix(int64(openTime/1000), 0).UTC()
 	ct := time.Unix(int64(closeTime/1000), 0).UTC()
 	o, err := strconv.ParseFloat(open, 64)
@@ -250,6 +261,6 @@ func createCandleFromKline(open, high, low, close, volume string, openTime, clos
 		return
 	}
 
-	candle, err = NewCandle(o, h, l, c, v, ot, ct, nil, nil)
+	candle, err = trade_knife.NewCandle(o, h, l, c, v, ot, ct, nil, nil)
 	return
 }

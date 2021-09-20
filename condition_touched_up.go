@@ -1,6 +1,6 @@
 package trade_knife
 
-// Check if candle close above the source but the High shadow
+// TouchedUp checks if candle close above the source but the High shadow
 // touched the source.
 //
 // H >= source

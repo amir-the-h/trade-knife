@@ -1,6 +1,6 @@
 package trade_knife
 
-// Check if candle is bearish
+// IsBearish checks if candle is bearish
 //
 // O < C,
 func (c *Candle) IsBearish() bool {

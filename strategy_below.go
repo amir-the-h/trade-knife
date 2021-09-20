@@ -1,6 +1,6 @@
 package trade_knife
 
-// Score candles by checking if candles are below source.
+// ScoreByBelow scores candles by checking if candles are below source.
 func (q *Quote) ScoreByBelow(score float64, source Source) {
 	quote := *q
 	// loop through quote

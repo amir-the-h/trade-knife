@@ -1,6 +1,6 @@
 package trade_knife
 
-// Score candles by checking if candles are touching up source.
+// ScoreByTouchUp scores candles by checking if candles are touching up source.
 func (q *Quote) ScoreByTouchUp(score float64, source Source) {
 	quote := *q
 	// loop through quote

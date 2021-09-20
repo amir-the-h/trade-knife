@@ -1,6 +1,6 @@
 package trade_knife
 
-// Check if fast source crossed over the slow source.
+// CrossedOver checks if fast source crossed over the slow source.
 //
 // fastSource > slowSource
 // prevfastSource <= prevslowSource

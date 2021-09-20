@@ -2,10 +2,14 @@
 // operate with financial time-series data.
 package trade_knife
 
-import "errors"
+import (
+	"errors"
+	"github.com/amir-the-h/goex"
+)
 
+// EnterSignal is a signal for entering into positions
 type EnterSignal struct {
-	Symbol     string
+	Currency   goex.CurrencyPair
 	Score      float64
 	Quote      float64
 	TakeProfit float64
@@ -13,28 +17,48 @@ type EnterSignal struct {
 	Cause      string
 	Candle     Candle
 }
+
+// ExitSignal is a signal for exiting from positions
 type ExitSignal struct {
 	Trade  *Trade
 	Candle *Candle
 	Cause  ExitCause
 }
 
-type PositionType string
-type MarketType string
-type TradeStatus string
+// ExitCause indicates why the position has been closed for
 type ExitCause string
 
+// PositionType indicates position direction
+type PositionType string
+
+// MarketType indicates the market type
+type MarketType string
+
+// TradeStatus indicates the trade status
+type TradeStatus string
+
+// TradesChannel to pass Trade through it
 type TradesChannel chan *Trade
+
+// EnterChannel to pass EnterSignal through it
 type EnterChannel chan EnterSignal
+
+// ExitChannel to pass ExitSignal through it
 type ExitChannel chan ExitSignal
+
+// CandleChannel to pass Candle through it
 type CandleChannel chan *Candle
 
+// CandleError will occur on Candle's operations
 type CandleError error
+
+// SourceError will occur on Source's operations
 type SourceError error
+
+// TradeError will occur on Trade's operations
 type TradeError error
 
 const (
-	// Intervals
 	Interval1m  = Interval("1m")
 	Interval3m  = Interval("3m")
 	Interval5m  = Interval("5m")
@@ -51,14 +75,12 @@ const (
 	Interval1w  = Interval("1w")
 	Interval1M  = Interval("1M")
 
-	// single sources
 	SourceOpen   = Source("open")
 	SourceHigh   = Source("high")
 	SourceLow    = Source("low")
 	SourceClose  = Source("close")
 	SourceVolume = Source("volume")
 
-	// double sources
 	SourceOpenHigh  = Source("oh2")
 	SourceOpenLow   = Source("ol2")
 	SourceOpenClose = Source("oc2")
@@ -66,29 +88,23 @@ const (
 	SourceHighClose = Source("hc2")
 	SourceLowClose  = Source("lc2")
 
-	// triple sources
 	SourceOpenHighLow   = Source("ohl3")
 	SourceOpenHighClose = Source("ohc3")
 	SourceOpenLowClose  = Source("olc3")
 	SourceHighLowClose  = Source("hlc3")
 
-	// all together
 	SourceOpenHighLowClose = Source("ohlc4")
 
-	// Position types
 	PositionBuy  = PositionType("Buy")
 	PositionSell = PositionType("Sell")
 
-	// Trade statuses
 	TradeStatusOpen  = TradeStatus("Open")
 	TradeStatusClose = TradeStatus("Close")
 
-	// Exit signals
 	ExitCauseStopLossTriggered   = ExitCause("Stop loss")
 	ExitCauseTakeProfitTriggered = ExitCause("Take profit")
 	ExitCauseMarket              = ExitCause("Market")
 
-	// Market types
 	MarketSpot     = MarketType("Spot")
 	MarketFutures  = MarketType("Futures")
 	MarketDelivery = MarketType("Delivery")
@@ -97,5 +113,4 @@ const (
 var (
 	ErrInvalidCandleData = errors.New("invalid data provided for candle").(CandleError)
 	ErrNotEnoughCandles  = errors.New("not enough candles to operate").(CandleError)
-	ErrInvalidSource     = errors.New("invalid source provided").(SourceError)
 )

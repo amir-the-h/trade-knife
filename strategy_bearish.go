@@ -1,6 +1,6 @@
 package trade_knife
 
-// Score candles by if candle is bearish
+// ScoreByBearish scores candles by if candle is bearish
 func (q *Quote) ScoreByBearish(score float64) {
 	quote := *q
 	// loop through quote

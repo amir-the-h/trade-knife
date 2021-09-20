@@ -19,7 +19,7 @@ type Candle struct {
 	Previous   *Candle                  `json:"-"`
 }
 
-// Returns a pointer to a fresh candle with provided data.
+// NewCandle returns a pointer to a fresh candle with provided data.
 func NewCandle(open, high, low, close, volume float64, openTime, closeTime time.Time, previous, next *Candle) (candle *Candle, err CandleError) {
 	if high < low || high < open || high < close || low > open || low > close {
 		err = ErrInvalidCandleData
@@ -42,7 +42,7 @@ func NewCandle(open, high, low, close, volume float64, openTime, closeTime time.
 	return
 }
 
-// Add indicator value by the given name into the candle.
+// AddIndicator adds indicator value by the given name into the candle.
 func (c *Candle) AddIndicator(tag IndicatorTag, value float64) {
 	c.Indicators[tag] = value
 }

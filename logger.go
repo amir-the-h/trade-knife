@@ -18,8 +18,8 @@ type Logger struct {
 type Output uint8
 
 const (
-	Stdout Output = iota
-	Daily  Output = Stdout + 1
+	Stdout Output = iota + 1
+	Daily
 )
 
 func (l *Logger) SwitchOutput(o Output) error {

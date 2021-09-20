@@ -3,16 +3,17 @@ package trade_knife
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/amir-the-h/goex"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-// Returns csv row of the candle.
+// Csv returns csv row of the candle.
 func (c *Candle) Csv(indicators ...IndicatorTag) (csv string) {
 	// first basic records
-	csv = fmt.Sprintf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s", c.Open, c.High, c.Low, c.Close, c.Volume, c.Score, c.Opentime.UTC().Format(time.RFC3339), c.Closetime.UTC().Format(time.RFC3339))
+	csv = fmt.Sprintf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s", c.Open, c.High, c.Low, c.Close, c.Volume, c.Score, c.Opentime.Local().Format(time.RFC3339), c.Closetime.Local().Format(time.RFC3339))
 
 	// get indicators values too
 	if len(indicators) > 0 {
@@ -28,7 +29,7 @@ func (c *Candle) Csv(indicators ...IndicatorTag) (csv string) {
 	return
 }
 
-// Returns csv formated string of whole quote.
+// Csv returns csv formatted string of whole quote.
 func (q Quote) Csv(indicators ...IndicatorTag) (csv string) {
 	if len(q.Candles) == 0 {
 		return
@@ -54,7 +55,7 @@ func (q Quote) Csv(indicators ...IndicatorTag) (csv string) {
 	return
 }
 
-// Writes down whole quote into a csv file.
+// WriteToCsv writes down whole quote into a csv file.
 func (q Quote) WriteToCsv(filename string, indicators ...IndicatorTag) error {
 	if len(q.Candles) == 0 {
 		return ErrNotEnoughCandles
@@ -62,7 +63,7 @@ func (q Quote) WriteToCsv(filename string, indicators ...IndicatorTag) error {
 
 	// need our file
 	if filename == "" {
-		filename = fmt.Sprintf("%s:%s-%s.csv", q.Market, q.Symbol, q.Interval)
+		filename = fmt.Sprintf("%s:%s-%s.csv", q.Market, q.Currency, q.Interval)
 	}
 
 	// open or create the file
@@ -80,8 +81,8 @@ func (q Quote) WriteToCsv(filename string, indicators ...IndicatorTag) error {
 	return err
 }
 
-// Read quote from csv file.
-func NewQuoteFromCsv(filename string, market MarketType, symbol string, interval Interval) (*Quote, error) {
+// NewQuoteFromCsv reads quote from csv file.
+func NewQuoteFromCsv(filename string, market MarketType, currency goex.CurrencyPair, interval Interval) (*Quote, error) {
 	csvFile, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -106,18 +107,18 @@ func NewQuoteFromCsv(filename string, market MarketType, symbol string, interval
 	}
 	quote := Quote{
 		Market:   market,
-		Symbol:   symbol,
+		Currency: currency,
 		Interval: interval,
 	}
 	for _, line := range csvLines {
-		open, _ := strconv.ParseFloat(line[indexMap["Open"]], 64)
-		high, _ := strconv.ParseFloat(line[indexMap["High"]], 64)
-		low, _ := strconv.ParseFloat(line[indexMap["Low"]], 64)
-		close, _ := strconv.ParseFloat(line[indexMap["Close"]], 64)
+		openPrice, _ := strconv.ParseFloat(line[indexMap["Open"]], 64)
+		highPrice, _ := strconv.ParseFloat(line[indexMap["High"]], 64)
+		lowPrice, _ := strconv.ParseFloat(line[indexMap["Low"]], 64)
+		closePrice, _ := strconv.ParseFloat(line[indexMap["Close"]], 64)
 		volume, _ := strconv.ParseFloat(line[indexMap["Volume"]], 64)
 		openTime, _ := time.Parse(time.RFC3339, line[indexMap["Open time"]])
 		closeTime, _ := time.Parse(time.RFC3339, line[indexMap["Close time"]])
-		candle, err := NewCandle(open, high, low, close, volume, openTime, closeTime, nil, nil)
+		candle, err := NewCandle(openPrice, highPrice, lowPrice, closePrice, volume, openTime, closeTime, nil, nil)
 		if err != nil {
 			return nil, err
 		}

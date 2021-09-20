@@ -2,19 +2,20 @@ package trade_knife
 
 import (
 	"errors"
+	"github.com/amir-the-h/goex"
 	"sort"
 	"time"
 )
 
 // Quote is the group of candles and make time-series.
 type Quote struct {
+	Currency goex.CurrencyPair
 	Market   MarketType
-	Symbol   string
 	Interval Interval
 	Candles  []*Candle
 }
 
-// Search for a candle and it's index amoung Quote by it's symbol and provided timestamp.
+// Find searches for a candle, and its index among Quote by its symbol and provided timestamp.
 func (q *Quote) Find(timestamp int64) (*Candle, int) {
 	quote := *q
 	for i, candle := range quote.Candles {
@@ -26,7 +27,7 @@ func (q *Quote) Find(timestamp int64) (*Candle, int) {
 	return nil, 0
 }
 
-// Run through the quote and reorder candles by the open time.
+// Sort runs through the quote and reorder candles by the open time.
 func (q *Quote) Sort() {
 	quote := *q
 	sort.Slice(quote.Candles, func(i, j int) bool { return quote.Candles[i].Opentime.Before(quote.Candles[j].Opentime) })
@@ -41,7 +42,7 @@ func (q *Quote) Sort() {
 	*q = quote
 }
 
-// Search the quote for provided candle and update it if it exists, otherwise
+// Sync searches the quote for provided candle and update it if it exists, otherwise
 // it will append to end of the quote.
 //
 // If you want to update a candle directly then pass sCandle
@@ -87,7 +88,7 @@ func (q *Quote) Sync(open, high, low, close, volume float64, openTime, closeTime
 	return
 }
 
-// Returns a list of indicators used in quote.
+// IndicatorTags returns a list of indicators used in quote.
 func (q *Quote) IndicatorTags() []IndicatorTag {
 	tags := []IndicatorTag{}
 	quote := *q
@@ -125,7 +126,7 @@ func (q *Quote) Merge(target *Quote) {
 	*q = quote
 }
 
-// Add indicator values by the given tag into the quote.
+// AddIndicator adds indicator values by the given tag into the quote.
 func (q *Quote) AddIndicator(tag IndicatorTag, values []float64) error {
 	quote := *q
 	if len(values) != len(quote.Candles) {

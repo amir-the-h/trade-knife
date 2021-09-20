@@ -1,6 +1,6 @@
 package trade_knife
 
-// Score candles by checking if candles are bullish.
+// ScoreByBullish scores candles by checking if candles are bullish.
 func (q *Quote) ScoreByBullish(score float64) {
 	quote := *q
 	// loop through quote

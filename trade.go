@@ -2,14 +2,15 @@ package trade_knife
 
 import (
 	"fmt"
+	"github.com/amir-the-h/goex"
 	"time"
 )
 
+// Trade represents a real world trade
 type Trade struct {
+	Currency          goex.CurrencyPair
 	Id                string
 	Driver            string
-	Symbol            string
-	Base              string
 	Quote             float64
 	Amount            float64
 	Entry             float64
@@ -29,7 +30,7 @@ type Trade struct {
 }
 type Trades []*Trade
 
-// Search for a trade and it's index amoung all trades.
+// Find searches for a trade, and its index among all trades.
 func (t Trades) Find(id string) (*Trade, int) {
 	for i, trade := range t {
 		if trade.Id == id {
@@ -40,23 +41,11 @@ func (t Trades) Find(id string) (*Trade, int) {
 	return nil, 0
 }
 
-// Interface to determine how a trader should implements.
-type Trader interface {
-	Open(id, symbol, base string, position PositionType, quote, entry float64, sl, tp float64, openCandle *Candle) *Trade
-	Close(id, exit float64, closeCandle *Candle)
-	EntryWatcher()
-	ExitWatcher()
-	CloseWatcher()
-}
-
-// returns a pointer to a fresh trade.
-func NewTrade(id, driver, symbol, base string, position PositionType, quote, entry float64, sl, tp float64, openCandle *Candle) *Trade {
+// NewTrade returns a pointer to a fresh trade.
+func NewTrade(id, driver string, currency goex.CurrencyPair, position PositionType, quote, entry float64, sl, tp float64, openCandle *Candle) *Trade {
 	var takeProfitPercent, stopLossPercent float64
 	now := time.Now().UTC()
 	amount := quote / entry
-	if id == "" {
-		id = fmt.Sprint(now.Unix())
-	}
 	if tp != 0 || sl != 0 {
 		if position == PositionBuy {
 			if tp != 0 {
@@ -78,8 +67,7 @@ func NewTrade(id, driver, symbol, base string, position PositionType, quote, ent
 	return &Trade{
 		Id:                id,
 		Driver:            driver,
-		Symbol:            symbol,
-		Base:              base,
+		Currency:          currency,
 		Quote:             quote,
 		Amount:            amount,
 		Entry:             entry,
@@ -94,7 +82,7 @@ func NewTrade(id, driver, symbol, base string, position PositionType, quote, ent
 	}
 }
 
-// Close an active trade.
+// Close closes an active trade.
 func (t *Trade) Close(price float64, candle *Candle) {
 	if t.Status == TradeStatusClose {
 		return
@@ -113,11 +101,11 @@ func (t *Trade) Close(price float64, candle *Candle) {
 	t.ProfitPercentage = t.ProfitPrice * 100 / t.Quote
 }
 
-// Stringify the trade.
+// String Stringify the trade.
 func (t Trade) String() string {
 	var text string
-	text = fmt.Sprintf("#%s\t%s\t%f %s\n", t.Id, t.Position, t.Amount, t.Symbol)
-	text += fmt.Sprintf("Quote:\t%f %s\n", t.Quote, t.Base)
+	text = fmt.Sprintf("#%s\t%s\t%f %s\n", t.Id, t.Position, t.Amount, t.Currency.CurrencyA)
+	text += fmt.Sprintf("Quote:\t%f %s\n", t.Quote, t.Currency.CurrencyB)
 	text += fmt.Sprintf("Status:\t%s\n", t.Status)
 	text += fmt.Sprintf("Entry:\t%.4f\t%s\n", t.Entry, t.OpenAt.Local().Format("06/02/01 15:04:05"))
 	if t.Status == TradeStatusClose {

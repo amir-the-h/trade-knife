@@ -5,7 +5,7 @@ import "strconv"
 // Source is a target field on candle.
 type Source string
 
-// Retrieve the value of the target field on the candle.
+// Get Retrieves the value of the target field on the candle.
 func (c *Candle) Get(source Source) (float64, bool) {
 	switch source {
 	// single sources
@@ -60,7 +60,7 @@ func (c *Candle) Get(source Source) (float64, bool) {
 	return 0., false
 }
 
-// Retrieve value of target field on all candles.
+// Get retrieves value of target field on all candles.
 func (q *Quote) Get(source Source) []float64 {
 	quote := *q
 	result := make([]float64, len(quote.Candles))
