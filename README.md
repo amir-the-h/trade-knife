@@ -1,4 +1,1 @@
-# Trade Knife
-### Switzer knife on your trading times
----
-More info to come soon.
+Ropo moved [here](https://github.com/amir-the-h/quota)
